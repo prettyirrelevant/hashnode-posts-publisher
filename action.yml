@@ -1,23 +1,28 @@
-name: 'The name of your action here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+author: 'Isaac Adewumi'
+name: 'hashnode-posts-publisher'
+description: 'Publish posts to Hashnode by pushing Markdown files to a GitHub repository.'
 
-# Add your action's branding here. This will appear on the GitHub Marketplace.
+# Branding appears on GitHub Marketplace
 branding:
-  icon: 'heart'
-  color: 'red'
+  icon: 'upload'
+  color: 'blue'
 
-# Define your inputs here.
+# Define input parameters
 inputs:
-  milliseconds:
-    description: 'Your input description here'
-    required: true
-    default: '1000'
+  ignore-drafts:
+    description: 'Whether to exclude draft posts from publishing to Hashnode.'
+    required: false
+    default: 'true'
 
-# Define your outputs here.
-outputs:
-  time:
-    description: 'Your output description here'
+  posts-directory:
+    description: 'The local directory containing the blog posts.'
+    required: false
+    default: "posts"
+
+  supported-formats:
+    description: 'The allowed file formats for blog posts.'
+    required: false
+    default: 'md,html'
 
 runs:
   using: node20
