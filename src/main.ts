@@ -3,8 +3,6 @@ import * as glob from '@actions/glob'
 import * as path from 'node:path'
 import fm from 'front-matter'
 import TurndownService from 'turndown'
-// @ts-ignore
-import * as turndownPluginGfm from 'turndown-plugin-gfm'
 import * as fs from 'node:fs'
 
 interface PostAttributes {
@@ -45,9 +43,8 @@ export async function run(): Promise<void> {
 
     // turndown
     const turndownService = new TurndownService()
-    turndownService.use(turndownPluginGfm.gfm)
-
     const posts: Post[] = []
+
     for await (const file of globber.globGenerator()) {
       console.log(`File: ${file}`)
 
