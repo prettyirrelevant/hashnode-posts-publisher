@@ -75,5 +75,5 @@ jobs:
         uses: ./
         with:
           ignore-drafts: true
-          posts-directory: /posts
+          posts-directory: example/posts
           supported-formats: md,html
