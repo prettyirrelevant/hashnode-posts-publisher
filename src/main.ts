@@ -3,6 +3,7 @@ import * as glob from '@actions/glob'
 import * as path from 'node:path'
 import fm from 'front-matter'
 import TurndownService from 'turndown'
+// @ts-ignore
 import turndownPluginGfm from 'turndown-plugin-gfm'
 import * as fs from 'node:fs'
 
