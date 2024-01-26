@@ -9,6 +9,14 @@ branding:
 
 # Define input parameters
 inputs:
+  openai-access-token:
+    description: 'The OpenAI API access token.'
+    required: false
+
+  access-token:
+    description: 'The Hashnode API access token.'
+    required: true
+
   ignore-drafts:
     description: 'Whether to exclude draft posts from publishing to Hashnode.'
     required: false
