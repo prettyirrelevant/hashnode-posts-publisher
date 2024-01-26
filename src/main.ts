@@ -1,19 +1,19 @@
+import TurndownService from 'turndown'
 import * as core from '@actions/core'
 import * as glob from '@actions/glob'
 import * as path from 'node:path'
-import fm from 'front-matter'
-import TurndownService from 'turndown'
 import * as fs from 'node:fs'
+import fm from 'front-matter'
 
 interface PostAttributes {
-  title: string
-  draft: boolean
   description?: string
+  draft: boolean
+  title: string
 }
 
 interface Post {
-  content: string
   attributes: PostAttributes
+  content: string
 }
 
 /**
@@ -52,8 +52,8 @@ export async function run(): Promise<void> {
         const htmlContent = fs.readFileSync(file, { encoding: 'utf8' })
         const markdownContent = turndownService.turndown(htmlContent)
         posts.push({
-          content: markdownContent,
-          attributes: { title: extractTitleFromHtml(htmlContent) || path.parse(file).name, draft: true }
+          attributes: { title: extractTitleFromHtml(htmlContent) || path.parse(file).name, draft: true },
+          content: markdownContent
         })
       } else if (file.endsWith('.md')) {
         const markdownContent = fs.readFileSync(file, { encoding: 'utf8' })
@@ -61,9 +61,11 @@ export async function run(): Promise<void> {
         if (formattedMarkdown.attributes.draft && ignoreDrafts) {
           continue
         }
-        posts.push({ content: formattedMarkdown.body, attributes: formattedMarkdown.attributes })
+        posts.push({ attributes: formattedMarkdown.attributes, content: formattedMarkdown.body })
       }
     }
+
+    console.log(`Found ${posts.length} posts:\n${JSON.stringify(posts, null, 2)}`)
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)

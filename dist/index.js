@@ -34261,12 +34261,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = void 0;
+const turndown_1 = __importDefault(__nccwpck_require__(4800));
 const core = __importStar(__nccwpck_require__(2186));
 const glob = __importStar(__nccwpck_require__(8090));
 const path = __importStar(__nccwpck_require__(9411));
-const front_matter_1 = __importDefault(__nccwpck_require__(7646));
-const turndown_1 = __importDefault(__nccwpck_require__(4800));
 const fs = __importStar(__nccwpck_require__(7561));
+const front_matter_1 = __importDefault(__nccwpck_require__(7646));
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
@@ -34293,8 +34293,8 @@ async function run() {
                 const htmlContent = fs.readFileSync(file, { encoding: 'utf8' });
                 const markdownContent = turndownService.turndown(htmlContent);
                 posts.push({
-                    content: markdownContent,
-                    attributes: { title: extractTitleFromHtml(htmlContent) || path.parse(file).name, draft: true }
+                    attributes: { title: extractTitleFromHtml(htmlContent) || path.parse(file).name, draft: true },
+                    content: markdownContent
                 });
             }
             else if (file.endsWith('.md')) {
@@ -34303,9 +34303,10 @@ async function run() {
                 if (formattedMarkdown.attributes.draft && ignoreDrafts) {
                     continue;
                 }
-                posts.push({ content: formattedMarkdown.body, attributes: formattedMarkdown.attributes });
+                posts.push({ attributes: formattedMarkdown.attributes, content: formattedMarkdown.body });
             }
         }
+        console.log(`Found ${posts.length} posts:\n${JSON.stringify(posts, null, 2)}`);
     }
     catch (error) {
         // Fail the workflow run if an error occurs
