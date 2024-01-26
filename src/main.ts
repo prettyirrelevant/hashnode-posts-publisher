@@ -4,7 +4,7 @@ import * as path from 'node:path'
 import fm from 'front-matter'
 import TurndownService from 'turndown'
 // @ts-ignore
-import turndownPluginGfm from 'turndown-plugin-gfm'
+import * as turndownPluginGfm from 'turndown-plugin-gfm'
 import * as fs from 'node:fs'
 
 interface PostAttributes {
