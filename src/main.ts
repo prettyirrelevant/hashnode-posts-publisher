@@ -76,8 +76,14 @@ export async function run(): Promise<void> {
     console.log(`Finished uploading ${results.length} posts.`)
 
     // TODO: write successful results to lockfile
-    const successfulResults = results.filter((result) => result.status === 'fulfilled')
-    console.log(`Successfully uploaded ${successfulResults.length} posts.`)
+
+    results.map((result) =>
+      result.status === 'fulfilled'
+        ? console.log(result.status, result.value)
+        : console.log(result.status, result.reason)
+    )
+    // const successfulResults = results.filter((result) => result.status === 'fulfilled')
+    // console.log(`Successfully uploaded ${successfulResults.length} posts.`)
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)

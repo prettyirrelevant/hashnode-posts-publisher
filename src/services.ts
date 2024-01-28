@@ -3,6 +3,7 @@ import axios from 'axios'
 import { Post } from './schema'
 
 export class HashnodeAPI {
+  private baseUrl = 'https://gql.hashnode.com'
   private client: axios.AxiosInstance
   private publicationId: string
 
@@ -11,7 +12,6 @@ export class HashnodeAPI {
       headers: {
         Authorization: accessToken
       },
-      baseURL: 'https://gql.hashnode.com',
       timeout: 5000
     })
     this.publicationId = publicationId
@@ -40,7 +40,7 @@ export class HashnodeAPI {
       }
     }
 
-    return await this.client.post('', { variables, query })
+    return await this.client.post(this.baseUrl, { variables, query })
   }
 
   async uploadPost(post: Post): Promise<any> {
@@ -66,6 +66,6 @@ export class HashnodeAPI {
       }
     }
 
-    return await this.client.post('', { variables, query })
+    return await this.client.post(this.baseUrl, { variables, query })
   }
 }

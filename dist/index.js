@@ -64039,8 +64039,11 @@ async function run() {
         const results = await Promise.allSettled(posts.map(async (post) => post.attributes.draft ? hashnodeApiClient.uploadDraft(post) : hashnodeApiClient.uploadPost(post)));
         console.log(`Finished uploading ${results.length} posts.`);
         // TODO: write successful results to lockfile
-        const successfulResults = results.filter((result) => result.status === 'fulfilled');
-        console.log(`Successfully uploaded ${successfulResults.length} posts.`);
+        results.map((result) => result.status === 'fulfilled'
+            ? console.log(result.status, result.value)
+            : console.log(result.status, result.reason));
+        // const successfulResults = results.filter((result) => result.status === 'fulfilled')
+        // console.log(`Successfully uploaded ${successfulResults.length} posts.`)
     }
     catch (error) {
         // Fail the workflow run if an error occurs
@@ -64110,6 +64113,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HashnodeAPI = void 0;
 const axios_1 = __importDefault(__nccwpck_require__(8757));
 class HashnodeAPI {
+    baseUrl = 'https://gql.hashnode.com';
     client;
     publicationId;
     constructor(accessToken, publicationId) {
@@ -64117,7 +64121,6 @@ class HashnodeAPI {
             headers: {
                 Authorization: accessToken
             },
-            baseURL: 'https://gql.hashnode.com',
             timeout: 5000
         });
         this.publicationId = publicationId;
@@ -64144,7 +64147,7 @@ class HashnodeAPI {
                 slug: post.slug
             }
         };
-        return await this.client.post('', { variables, query });
+        return await this.client.post(this.baseUrl, { variables, query });
     }
     async uploadPost(post) {
         const query = `
@@ -64168,7 +64171,7 @@ class HashnodeAPI {
                 slug: post.slug
             }
         };
-        return await this.client.post('', { variables, query });
+        return await this.client.post(this.baseUrl, { variables, query });
     }
 }
 exports.HashnodeAPI = HashnodeAPI;
