@@ -31,7 +31,7 @@ export class HashnodeAPI {
     `
     const variables = {
       input: {
-        coverImageOptions: post.attributes.coverImageUrl ? { coverImageURL: post.attributes.coverImageUrl } : null,
+        ...(post.attributes.coverImageUrl && { coverImageOptions: { coverImageURL: post.attributes.coverImageUrl } }),
         publicationId: this.publicationId,
         contentMarkdown: post.content,
         title: post.attributes.title,
@@ -62,7 +62,7 @@ export class HashnodeAPI {
     `
     const variables = {
       input: {
-        coverImageOptions: post.attributes.coverImageUrl ? { coverImageURL: post.attributes.coverImageUrl } : null,
+        ...(post.attributes.coverImageUrl && { coverImageOptions: { coverImageURL: post.attributes.coverImageUrl } }),
         publicationId: this.publicationId,
         contentMarkdown: post.content,
         title: post.attributes.title,

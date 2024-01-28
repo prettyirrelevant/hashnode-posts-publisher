@@ -63986,6 +63986,7 @@ const fs = __importStar(__nccwpck_require__(7561));
 const slugify_1 = __importDefault(__nccwpck_require__(9481));
 const front_matter_1 = __importDefault(__nccwpck_require__(7646));
 const utils_1 = __nccwpck_require__(1314);
+const schema_1 = __nccwpck_require__(2199);
 const services_1 = __nccwpck_require__(3711);
 /**
  * The main function for the action.
@@ -63994,13 +63995,11 @@ const services_1 = __nccwpck_require__(3711);
 async function run() {
     try {
         const inputs = (0, utils_1.getActionInputs)();
-        console.log(`Inputs: ${JSON.stringify(inputs)}`);
         const excludePatterns = ['README.md', 'LICENSE.md', 'CONTRIBUTING.md'].map((file) => core.toPlatformPath(`!${inputs.postsDirectory}/${file}`));
         const patterns = [
             ...excludePatterns,
             ...inputs.supportedFormats.map((format) => core.toPlatformPath(`${inputs.postsDirectory}/**/*.${format}`))
         ];
-        console.log(`Patterns: ${JSON.stringify(patterns)}`);
         const posts = [];
         const turndownService = new turndown_1.default();
         // TODO: fetch lockfile for repository and ignore posts that have not changed.
@@ -64011,12 +64010,18 @@ async function run() {
                 const htmlContent = fs.readFileSync(file, { encoding: 'utf8' });
                 const markdownContent = turndownService.turndown(htmlContent);
                 const title = (0, utils_1.extractTitleFromHtml)(htmlContent) || path.parse(file).name;
-                posts.push({
-                    attributes: { draft: true, title },
+                const tags = (0, utils_1.extractKeywordsFromHtml)(htmlContent) || ['hashnode'];
+                posts.push(schema_1.PostSchema.parse({
+                    attributes: {
+                        description: (0, utils_1.extractDescriptionFromHtml)(htmlContent),
+                        draft: true,
+                        title,
+                        tags
+                    },
+                    hash: (0, utils_1.computeContentHash)(htmlContent),
                     content: markdownContent,
-                    slug: (0, slugify_1.default)(title),
-                    hash: ''
-                });
+                    slug: (0, slugify_1.default)(title)
+                }));
             }
             else if (file.endsWith('.md')) {
                 const markdownContent = fs.readFileSync(file, { encoding: 'utf8' });
@@ -64024,12 +64029,12 @@ async function run() {
                 if (formattedMarkdown.attributes.draft && inputs.ignoreDrafts) {
                     continue;
                 }
-                posts.push({
+                posts.push(schema_1.PostSchema.parse({
                     slug: (0, slugify_1.default)(formattedMarkdown.attributes.title),
+                    hash: (0, utils_1.computeContentHash)(markdownContent),
                     attributes: formattedMarkdown.attributes,
-                    content: formattedMarkdown.body,
-                    hash: ''
-                });
+                    content: formattedMarkdown.body
+                }));
             }
         }
         console.log(`Found ${posts.length} posts.`);
@@ -64065,7 +64070,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ActionInputsSchema = void 0;
+exports.PostSchema = exports.ActionInputsSchema = void 0;
 const slugify_1 = __importDefault(__nccwpck_require__(9481));
 const zod_1 = __nccwpck_require__(3301);
 const SupportedFormatsSchema = zod_1.z.enum(['md', 'html', 'audio']);
@@ -64075,24 +64080,21 @@ exports.ActionInputsSchema = zod_1.z.object({
         return formats.map((format) => SupportedFormatsSchema.parse(format));
     }),
     ignoreDrafts: zod_1.z.boolean().default(false),
-    openaiApiKey: zod_1.z.string().optional(),
+    openaiApiKey: zod_1.z.string().nullish(),
     postsDirectory: zod_1.z.string(),
     publicationId: zod_1.z.string(),
     accessToken: zod_1.z.string()
 });
 const PostAttributesSchema = zod_1.z.object({
-    tags: zod_1.z
-        .array(zod_1.z.string())
-        .optional()
-        .transform((tags) => tags?.map((tag) => ({ slug: (0, slugify_1.default)(tag), name: tag }))),
-    coverImageUrl: zod_1.z.string().optional(),
-    description: zod_1.z.string().optional(),
+    tags: zod_1.z.array(zod_1.z.string()).transform((tags) => tags?.map((tag) => ({ slug: (0, slugify_1.default)(tag), name: tag }))),
+    coverImageUrl: zod_1.z.string().nullish(),
+    description: zod_1.z.string().nullish(),
     draft: zod_1.z.boolean().default(false),
     title: zod_1.z.string()
 });
-const PostSchema = zod_1.z.object({
+exports.PostSchema = zod_1.z.object({
     attributes: PostAttributesSchema,
-    imageUrl: zod_1.z.string().optional(),
+    imageUrl: zod_1.z.string().nullish(),
     content: zod_1.z.string(),
     slug: zod_1.z.string(),
     hash: zod_1.z.string()
@@ -64139,7 +64141,7 @@ class HashnodeAPI {
     `;
         const variables = {
             input: {
-                coverImageOptions: post.attributes.coverImageUrl ? { coverImageURL: post.attributes.coverImageUrl } : null,
+                ...(post.attributes.coverImageUrl && { coverImageOptions: { coverImageURL: post.attributes.coverImageUrl } }),
                 publicationId: this.publicationId,
                 contentMarkdown: post.content,
                 title: post.attributes.title,
@@ -64149,7 +64151,7 @@ class HashnodeAPI {
         };
         const response = await this.client.post(this.baseUrl, { variables, query });
         if (response.data.errors) {
-            throw new Error(JSON.stringify(response.data.errors));
+            return Promise.reject(new Error(JSON.stringify(response.data.errors)));
         }
         return response.data;
     }
@@ -64167,7 +64169,7 @@ class HashnodeAPI {
     `;
         const variables = {
             input: {
-                coverImageOptions: post.attributes.coverImageUrl ? { coverImageURL: post.attributes.coverImageUrl } : null,
+                ...(post.attributes.coverImageUrl && { coverImageOptions: { coverImageURL: post.attributes.coverImageUrl } }),
                 publicationId: this.publicationId,
                 contentMarkdown: post.content,
                 title: post.attributes.title,
@@ -64177,7 +64179,7 @@ class HashnodeAPI {
         };
         const response = await this.client.post(this.baseUrl, { variables, query });
         if (response.data.errors) {
-            throw new Error(JSON.stringify(response.data.errors));
+            return Promise.reject(new Error(JSON.stringify(response.data.errors)));
         }
         return response.data;
     }
@@ -64216,8 +64218,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getActionInputs = exports.extractTitleFromHtml = void 0;
+exports.computeContentHash = exports.getActionInputs = exports.extractKeywordsFromHtml = exports.extractDescriptionFromHtml = exports.extractTitleFromHtml = void 0;
 const core = __importStar(__nccwpck_require__(2186));
+const crypto = __importStar(__nccwpck_require__(6005));
 const schema_1 = __nccwpck_require__(2199);
 /**
  * Extracts the title from an HTML string.
@@ -64233,6 +64236,35 @@ function extractTitleFromHtml(html) {
     return null;
 }
 exports.extractTitleFromHtml = extractTitleFromHtml;
+/**
+ * Extracts the description from HTML by searching for the meta tag with name="description".
+ *
+ * @param html - The HTML string to extract the description from.
+ * @returns The extracted description or null if not found.
+ */
+function extractDescriptionFromHtml(html) {
+    const match = /<meta\s+name="description"\s+content="([^"]*)"\s*\/?>/i.exec(html);
+    if (match && match.length >= 2) {
+        return match[1];
+    }
+    return null;
+}
+exports.extractDescriptionFromHtml = extractDescriptionFromHtml;
+/**
+ * Extracts the keywords/tags from HTML by searching for the meta tag with name="keywords".
+ *
+ * @param html - The HTML string to extract keywords from.
+ * @returns An array of keywords extracted from the HTML metadata, or null if no keywords are found.
+ */
+function extractKeywordsFromHtml(html) {
+    const match = /<meta\s+name="keywords"\s+content="([^"]*)"\s*\/?>/i.exec(html);
+    if (match && match.length >= 2) {
+        const keywordsString = match[1];
+        return keywordsString.split(',').map((keyword) => keyword.trim());
+    }
+    return null;
+}
+exports.extractKeywordsFromHtml = extractKeywordsFromHtml;
 /**
  * Gets the inputs for the action.
  * @returns {ActionInputs} The inputs for the action.
@@ -64254,6 +64286,12 @@ function getActionInputs() {
     });
 }
 exports.getActionInputs = getActionInputs;
+function computeContentHash(content) {
+    const hash = crypto.createHash('sha256');
+    hash.update(content);
+    return hash.digest('hex');
+}
+exports.computeContentHash = computeContentHash;
 
 
 /***/ }),
@@ -64351,6 +64389,14 @@ module.exports = require("https");
 
 "use strict";
 module.exports = require("net");
+
+/***/ }),
+
+/***/ 6005:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:crypto");
 
 /***/ }),
 
