@@ -9,8 +9,8 @@ branding:
 
 # Define input parameters
 inputs:
-  openai-access-token:
-    description: 'The OpenAI API access token.'
+  openai-api-key:
+    description: 'The OpenAI API key for authentication.'
     required: false
 
   access-token:
@@ -20,7 +20,7 @@ inputs:
   ignore-drafts:
     description: 'Whether to exclude draft posts from publishing to Hashnode.'
     required: false
-    default: 'true'
+    default: 'false'
 
   posts-directory:
     description: 'The local directory containing the blog posts.'
@@ -31,6 +31,10 @@ inputs:
     description: 'The allowed file formats for blog posts.'
     required: false
     default: 'md,html'
+
+  publication-id:
+    description: 'The ID of the publication to publish the posts to.'
+    required: true
 
 runs:
   using: node20
