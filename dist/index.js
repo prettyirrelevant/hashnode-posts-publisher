@@ -63998,7 +63998,7 @@ async function run() {
         const excludePatterns = ['README.md', 'LICENSE.md', 'CONTRIBUTING.md'].map((file) => core.toPlatformPath(`!${inputs.postsDirectory}/${file}`));
         const patterns = [
             ...excludePatterns,
-            ...inputs.supportedFormats.map((format) => core.toPlatformPath(`${inputs.supportedFormats}/**/*.${format}`))
+            ...inputs.supportedFormats.map((format) => core.toPlatformPath(`${inputs.postsDirectory}/**/*.${format}`))
         ];
         console.log(`Patterns: ${JSON.stringify(patterns)}`);
         const posts = [];
