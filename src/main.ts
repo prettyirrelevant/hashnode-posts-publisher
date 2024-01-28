@@ -32,6 +32,8 @@ export async function run(): Promise<void> {
     // TODO: fetch lockfile for repository and ignore posts that have not changed.
 
     for await (const file of globber.globGenerator()) {
+      console.log(`File: ${file}`)
+
       if (file.endsWith('.html')) {
         const htmlContent = fs.readFileSync(file, { encoding: 'utf8' })
         const markdownContent = turndownService.turndown(htmlContent)
@@ -58,6 +60,7 @@ export async function run(): Promise<void> {
         })
       }
     }
+    console.log(`Found ${posts.length} posts.`)
 
     // TODO: handle audio files.
     // TODO: generate lockfile to avoid duplicate posts.
@@ -67,7 +70,7 @@ export async function run(): Promise<void> {
         post.attributes.draft ? hashnodeApiClient.uploadDraft(post) : hashnodeApiClient.uploadPost(post)
       )
     )
-    console.log(results)
+    console.log(`Finished uploading ${results.length} posts.`)
 
     // TODO: write successful results to lockfile
     const successfulResults = results.filter((result) => result.status === 'fulfilled')
