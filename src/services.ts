@@ -40,7 +40,12 @@ export class HashnodeAPI {
       }
     }
 
-    return await this.client.post(this.baseUrl, { variables, query })
+    const response = await this.client.post(this.baseUrl, { variables, query })
+    if (response.data.errors) {
+      throw new Error(JSON.stringify(response.data.errors))
+    }
+
+    return response.data
   }
 
   async uploadPost(post: Post): Promise<any> {
@@ -66,6 +71,11 @@ export class HashnodeAPI {
       }
     }
 
-    return await this.client.post(this.baseUrl, { variables, query })
+    const response = await this.client.post(this.baseUrl, { variables, query })
+    if (response.data.errors) {
+      throw new Error(JSON.stringify(response.data.errors))
+    }
+
+    return response.data
   }
 }

@@ -64040,7 +64040,7 @@ async function run() {
         console.log(`Finished uploading ${results.length} posts.`);
         // TODO: write successful results to lockfile
         results.map((result) => result.status === 'fulfilled'
-            ? console.log(result.status, result.value)
+            ? console.log(result.status, result.value.data)
             : console.log(result.status, result.reason));
         // const successfulResults = results.filter((result) => result.status === 'fulfilled')
         // console.log(`Successfully uploaded ${successfulResults.length} posts.`)
@@ -64147,7 +64147,11 @@ class HashnodeAPI {
                 slug: post.slug
             }
         };
-        return await this.client.post(this.baseUrl, { variables, query });
+        const response = await this.client.post(this.baseUrl, { variables, query });
+        if (response.data.errors) {
+            throw new Error(JSON.stringify(response.data.errors));
+        }
+        return response.data;
     }
     async uploadPost(post) {
         const query = `
@@ -64171,7 +64175,11 @@ class HashnodeAPI {
                 slug: post.slug
             }
         };
-        return await this.client.post(this.baseUrl, { variables, query });
+        const response = await this.client.post(this.baseUrl, { variables, query });
+        if (response.data.errors) {
+            throw new Error(JSON.stringify(response.data.errors));
+        }
+        return response.data;
     }
 }
 exports.HashnodeAPI = HashnodeAPI;

@@ -79,7 +79,7 @@ export async function run(): Promise<void> {
 
     results.map((result) =>
       result.status === 'fulfilled'
-        ? console.log(result.status, result.value)
+        ? console.log(result.status, result.value.data)
         : console.log(result.status, result.reason)
     )
     // const successfulResults = results.filter((result) => result.status === 'fulfilled')
