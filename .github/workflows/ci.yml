@@ -62,7 +62,7 @@ jobs:
         run: echo "${{ steps.test-action.outputs.time }}"
 
   test-local-action:
-    name: hashnode-posts-publisher test
+    name: GitHub Actions Test
     runs-on: ubuntu-latest
 
     steps:
@@ -70,10 +70,12 @@ jobs:
         id: checkout
         uses: actions/checkout@v4
 
-      - name: test hashnode-posts-publisher
-        id: test-local-action
+      - name: Test Local Action
+        id: test-action
         uses: ./
         with:
-          ignore-drafts: true
-          posts-directory: example/posts
+          ignore-drafts: false
           supported-formats: md,html
+          posts-directory: example/posts
+          publication-id: 601c60891054fa16dadd69f7
+          access-token: ${{ secrets.HASHNODE_ACCESS_TOKEN }}

@@ -80,5 +80,43 @@ rules:
     '@typescript-eslint/semi': ['error', 'never'],
     '@typescript-eslint/space-before-function-paren': 'off',
     '@typescript-eslint/type-annotation-spacing': 'error',
-    '@typescript-eslint/unbound-method': 'error'
+    '@typescript-eslint/unbound-method': 'error',
+    "perfectionist/sort-array-includes":
+      ["error", {"type": "line-length", "order": "desc", "spread-last": true}],
+    "perfectionist/sort-object-types": [
+      "error",
+      {
+        "type": "line-length",
+        "order": "desc"
+      }
+    ],
+    "perfectionist/sort-objects": [
+      "error",
+      {
+        "type": "line-length",
+        "order": "desc",
+        "partition-by-comment": "Part:**",
+        "groups": ["id", "unknown"],
+        "custom-groups": {
+          "id": "id"
+        }
+      }
+    ],
+    "perfectionist/sort-classes": [
+      "error",
+      {
+        "type": "line-length",
+        "order": "desc",
+        "groups": [
+          "index-signature",
+          "static-property",
+          "private-property",
+          "property",
+          "constructor",
+          "static-method",
+          "private-method",
+          "method"
+        ]
+      }
+    ]
   }
