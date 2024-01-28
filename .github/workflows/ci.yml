@@ -55,25 +55,6 @@ jobs:
         id: test-action
         uses: ./
         with:
-          milliseconds: 2000
-
-      - name: Print Output
-        id: output
-        run: echo "${{ steps.test-action.outputs.time }}"
-
-  test-local-action:
-    name: GitHub Actions Test
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        id: checkout
-        uses: actions/checkout@v4
-
-      - name: Test Local Action
-        id: test-action
-        uses: ./
-        with:
           ignore-drafts: false
           supported-formats: md,html
           posts-directory: example/posts
