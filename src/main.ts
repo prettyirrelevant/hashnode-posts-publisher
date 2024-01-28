@@ -17,6 +17,8 @@ import { HashnodeAPI } from './services'
 export async function run(): Promise<void> {
   try {
     const inputs = getActionInputs()
+    console.log(`Inputs: ${JSON.stringify(inputs)}`)
+
     const excludePatterns = ['README.md', 'LICENSE.md', 'CONTRIBUTING.md'].map((file) =>
       core.toPlatformPath(`!${inputs.postsDirectory}/${file}`)
     )
@@ -24,13 +26,14 @@ export async function run(): Promise<void> {
       ...excludePatterns,
       ...inputs.supportedFormats.map((format) => core.toPlatformPath(`${inputs.supportedFormats}/**/*.${format}`))
     ]
-    const globber = await glob.create(patterns.join('\n'))
+    console.log(`Patterns: ${JSON.stringify(patterns)}`)
 
     const posts: Post[] = []
     const turndownService = new TurndownService()
 
     // TODO: fetch lockfile for repository and ignore posts that have not changed.
 
+    const globber = await glob.create(patterns.join('\n'))
     for await (const file of globber.globGenerator()) {
       console.log(`File: ${file}`)
 

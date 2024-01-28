@@ -63994,15 +63994,17 @@ const services_1 = __nccwpck_require__(3711);
 async function run() {
     try {
         const inputs = (0, utils_1.getActionInputs)();
+        console.log(`Inputs: ${JSON.stringify(inputs)}`);
         const excludePatterns = ['README.md', 'LICENSE.md', 'CONTRIBUTING.md'].map((file) => core.toPlatformPath(`!${inputs.postsDirectory}/${file}`));
         const patterns = [
             ...excludePatterns,
             ...inputs.supportedFormats.map((format) => core.toPlatformPath(`${inputs.supportedFormats}/**/*.${format}`))
         ];
-        const globber = await glob.create(patterns.join('\n'));
+        console.log(`Patterns: ${JSON.stringify(patterns)}`);
         const posts = [];
         const turndownService = new turndown_1.default();
         // TODO: fetch lockfile for repository and ignore posts that have not changed.
+        const globber = await glob.create(patterns.join('\n'));
         for await (const file of globber.globGenerator()) {
             console.log(`File: ${file}`);
             if (file.endsWith('.html')) {
