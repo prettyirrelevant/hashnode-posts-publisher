@@ -64041,7 +64041,9 @@ async function run() {
         // TODO: handle audio files.
         // TODO: generate lockfile to avoid duplicate posts.
         const hashnodeApiClient = new services_1.HashnodeAPI(inputs.accessToken, inputs.publicationId);
-        const results = await Promise.allSettled(posts.map(async (post) => post.attributes.draft ? hashnodeApiClient.uploadDraft(post) : hashnodeApiClient.uploadPost(post)));
+        const results = await Promise.allSettled(posts.map(async (post) => 
+        // post.attributes.draft ? hashnodeApiClient.uploadDraft(post) : hashnodeApiClient.uploadPost(post)
+        hashnodeApiClient.uploadPost(post)));
         console.log(`Finished uploading ${results.length} posts.`);
         // TODO: write successful results to lockfile
         results.map((result) => result.status === 'fulfilled'
