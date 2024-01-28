@@ -9,7 +9,7 @@ export const ActionInputsSchema = z.object({
     return formats.map((format) => SupportedFormatsSchema.parse(format))
   }),
   ignoreDrafts: z.boolean().default(false),
-  openaiApiKey: z.string().optional(),
+  openaiApiKey: z.string().nullish(),
   postsDirectory: z.string(),
   publicationId: z.string(),
   accessToken: z.string()
@@ -18,16 +18,16 @@ export type ActionInputs = z.infer<typeof ActionInputsSchema>
 
 const PostAttributesSchema = z.object({
   tags: z.array(z.string()).transform((tags) => tags?.map((tag) => ({ slug: slugify(tag), name: tag }))),
-  coverImageUrl: z.string().optional(),
-  description: z.string().optional(),
+  coverImageUrl: z.string().nullish(),
+  description: z.string().nullish(),
   draft: z.boolean().default(false),
   title: z.string()
 })
 export type PostAttributes = z.infer<typeof PostAttributesSchema>
 
-const PostSchema = z.object({
+export const PostSchema = z.object({
   attributes: PostAttributesSchema,
-  imageUrl: z.string().optional(),
+  imageUrl: z.string().nullish(),
   content: z.string(),
   slug: z.string(),
   hash: z.string()

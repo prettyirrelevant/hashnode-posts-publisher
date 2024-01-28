@@ -6,8 +6,14 @@ import * as fs from 'node:fs'
 import slugify from 'slugify'
 import fm from 'front-matter'
 
-import { extractTitleFromHtml, getActionInputs } from './utils'
-import { PostAttributes, Post } from './schema'
+import {
+  extractDescriptionFromHtml,
+  extractKeywordsFromHtml,
+  extractTitleFromHtml,
+  computeContentHash,
+  getActionInputs
+} from './utils'
+import { PostAttributes, PostSchema, Post } from './schema'
 import { HashnodeAPI } from './services'
 
 /**
@@ -38,13 +44,21 @@ export async function run(): Promise<void> {
         const htmlContent = fs.readFileSync(file, { encoding: 'utf8' })
         const markdownContent = turndownService.turndown(htmlContent)
         const title = extractTitleFromHtml(htmlContent) || path.parse(file).name
+        const tags = extractKeywordsFromHtml(htmlContent) || ['hashnode']
 
-        posts.push({
-          attributes: { draft: true, title },
-          content: markdownContent,
-          slug: slugify(title),
-          hash: ''
-        })
+        posts.push(
+          PostSchema.parse({
+            attributes: {
+              description: extractDescriptionFromHtml(htmlContent),
+              draft: true,
+              title,
+              tags
+            },
+            hash: computeContentHash(htmlContent),
+            content: markdownContent,
+            slug: slugify(title)
+          })
+        )
       } else if (file.endsWith('.md')) {
         const markdownContent = fs.readFileSync(file, { encoding: 'utf8' })
         const formattedMarkdown = fm<PostAttributes>(markdownContent)
@@ -52,12 +66,14 @@ export async function run(): Promise<void> {
           continue
         }
 
-        posts.push({
-          slug: slugify(formattedMarkdown.attributes.title),
-          attributes: formattedMarkdown.attributes,
-          content: formattedMarkdown.body,
-          hash: ''
-        })
+        posts.push(
+          PostSchema.parse({
+            slug: slugify(formattedMarkdown.attributes.title),
+            hash: computeContentHash(markdownContent),
+            attributes: formattedMarkdown.attributes,
+            content: formattedMarkdown.body
+          })
+        )
       }
     }
     console.log(`Found ${posts.length} posts.`)
