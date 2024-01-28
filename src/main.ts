@@ -83,7 +83,8 @@ export async function run(): Promise<void> {
     const hashnodeApiClient = new HashnodeAPI(inputs.accessToken, inputs.publicationId)
     const results = await Promise.allSettled(
       posts.map(async (post) =>
-        post.attributes.draft ? hashnodeApiClient.uploadDraft(post) : hashnodeApiClient.uploadPost(post)
+        // post.attributes.draft ? hashnodeApiClient.uploadDraft(post) : hashnodeApiClient.uploadPost(post)
+        hashnodeApiClient.uploadPost(post)
       )
     )
     console.log(`Finished uploading ${results.length} posts.`)
