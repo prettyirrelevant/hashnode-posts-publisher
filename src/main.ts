@@ -67,6 +67,7 @@ export async function run(): Promise<void> {
         post.attributes.draft ? hashnodeApiClient.uploadDraft(post) : hashnodeApiClient.uploadPost(post)
       )
     )
+    console.log(results)
 
     // TODO: write successful results to lockfile
     const successfulResults = results.filter((result) => result.status === 'fulfilled')

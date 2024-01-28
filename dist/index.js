@@ -64033,6 +64033,7 @@ async function run() {
         // TODO: generate lockfile to avoid duplicate posts.
         const hashnodeApiClient = new services_1.HashnodeAPI(inputs.accessToken, inputs.publicationId);
         const results = await Promise.allSettled(posts.map(async (post) => post.attributes.draft ? hashnodeApiClient.uploadDraft(post) : hashnodeApiClient.uploadPost(post)));
+        console.log(results);
         // TODO: write successful results to lockfile
         const successfulResults = results.filter((result) => result.status === 'fulfilled');
         console.log(`Successfully uploaded ${successfulResults.length} posts.`);
