@@ -55,7 +55,7 @@ jobs:
         id: test-action
         uses: ./
         with:
-          ignore-drafts: false
+          ignore-drafts: true
           supported-formats: md,html
           posts-directory: example/posts
           publication-id: 601c60891054fa16dadd69f7

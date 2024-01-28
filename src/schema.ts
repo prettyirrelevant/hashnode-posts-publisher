@@ -17,10 +17,7 @@ export const ActionInputsSchema = z.object({
 export type ActionInputs = z.infer<typeof ActionInputsSchema>
 
 const PostAttributesSchema = z.object({
-  tags: z
-    .array(z.string())
-    .optional()
-    .transform((tags) => tags?.map((tag) => ({ slug: slugify(tag), name: tag }))),
+  tags: z.array(z.string()).transform((tags) => tags?.map((tag) => ({ slug: slugify(tag), name: tag }))),
   coverImageUrl: z.string().optional(),
   description: z.string().optional(),
   draft: z.boolean().default(false),

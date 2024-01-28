@@ -42,7 +42,7 @@ export class HashnodeAPI {
 
     const response = await this.client.post(this.baseUrl, { variables, query })
     if (response.data.errors) {
-      throw new Error(JSON.stringify(response.data.errors))
+      return Promise.reject(new Error(JSON.stringify(response.data.errors)))
     }
 
     return response.data
@@ -73,7 +73,7 @@ export class HashnodeAPI {
 
     const response = await this.client.post(this.baseUrl, { variables, query })
     if (response.data.errors) {
-      throw new Error(JSON.stringify(response.data.errors))
+      return Promise.reject(new Error(JSON.stringify(response.data.errors)))
     }
 
     return response.data
