@@ -3,7 +3,6 @@ import * as core from '@actions/core'
 import * as glob from '@actions/glob'
 import * as path from 'node:path'
 import * as fs from 'node:fs'
-import slugify from 'slugify'
 import fm from 'front-matter'
 
 import {
@@ -11,7 +10,8 @@ import {
   extractKeywordsFromHtml,
   extractTitleFromHtml,
   computeContentHash,
-  getActionInputs
+  getActionInputs,
+  slugifyText
 } from './utils'
 import { PostAttributes, PostSchema, Post } from './schema'
 import { HashnodeAPI } from './services'
@@ -56,7 +56,7 @@ export async function run(): Promise<void> {
             },
             hash: computeContentHash(htmlContent),
             content: markdownContent,
-            slug: slugify(title)
+            slug: slugifyText(title)
           })
         )
       } else if (file.endsWith('.md')) {
@@ -68,7 +68,7 @@ export async function run(): Promise<void> {
 
         posts.push(
           PostSchema.parse({
-            slug: slugify(formattedMarkdown.attributes.title),
+            slug: slugifyText(formattedMarkdown.attributes.title),
             hash: computeContentHash(markdownContent),
             attributes: formattedMarkdown.attributes,
             content: formattedMarkdown.body
@@ -96,8 +96,6 @@ export async function run(): Promise<void> {
         ? console.log(result.status, result.value.data)
         : console.log(result.status, result.reason)
     )
-    // const successfulResults = results.filter((result) => result.status === 'fulfilled')
-    // console.log(`Successfully uploaded ${successfulResults.length} posts.`)
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)

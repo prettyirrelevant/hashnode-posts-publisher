@@ -33,3 +33,15 @@ export const PostSchema = z.object({
   hash: z.string()
 })
 export type Post = z.infer<typeof PostSchema>
+
+export type UploadPostSuccessResponse = {
+  data: {
+    publishPost: {
+      post: {
+        slug: string
+        url: string
+        id: string
+      }
+    }
+  }
+}

@@ -63983,7 +63983,6 @@ const core = __importStar(__nccwpck_require__(2186));
 const glob = __importStar(__nccwpck_require__(8090));
 const path = __importStar(__nccwpck_require__(9411));
 const fs = __importStar(__nccwpck_require__(7561));
-const slugify_1 = __importDefault(__nccwpck_require__(9481));
 const front_matter_1 = __importDefault(__nccwpck_require__(7646));
 const utils_1 = __nccwpck_require__(1314);
 const schema_1 = __nccwpck_require__(2199);
@@ -64020,7 +64019,7 @@ async function run() {
                     },
                     hash: (0, utils_1.computeContentHash)(htmlContent),
                     content: markdownContent,
-                    slug: (0, slugify_1.default)(title)
+                    slug: (0, utils_1.slugifyText)(title)
                 }));
             }
             else if (file.endsWith('.md')) {
@@ -64030,7 +64029,7 @@ async function run() {
                     continue;
                 }
                 posts.push(schema_1.PostSchema.parse({
-                    slug: (0, slugify_1.default)(formattedMarkdown.attributes.title),
+                    slug: (0, utils_1.slugifyText)(formattedMarkdown.attributes.title),
                     hash: (0, utils_1.computeContentHash)(markdownContent),
                     attributes: formattedMarkdown.attributes,
                     content: formattedMarkdown.body
@@ -64049,8 +64048,6 @@ async function run() {
         results.map((result) => result.status === 'fulfilled'
             ? console.log(result.status, result.value.data)
             : console.log(result.status, result.reason));
-        // const successfulResults = results.filter((result) => result.status === 'fulfilled')
-        // console.log(`Successfully uploaded ${successfulResults.length} posts.`)
     }
     catch (error) {
         // Fail the workflow run if an error occurs
@@ -64110,12 +64107,32 @@ exports.PostSchema = zod_1.z.object({
 
 "use strict";
 
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HashnodeAPI = void 0;
-const axios_1 = __importDefault(__nccwpck_require__(8757));
+const axios_1 = __importStar(__nccwpck_require__(8757));
 class HashnodeAPI {
     baseUrl = 'https://gql.hashnode.com';
     client;
@@ -64151,11 +64168,19 @@ class HashnodeAPI {
                 slug: post.slug
             }
         };
-        const response = await this.client.post(this.baseUrl, { variables, query });
-        if (response.data.errors) {
-            return Promise.reject(new Error(JSON.stringify(response.data.errors)));
+        try {
+            const response = await this.client.post(this.baseUrl, { variables, query });
+            if (response.data.errors) {
+                return Promise.reject(new Error(JSON.stringify(response.data.errors)));
+            }
+            return response.data;
         }
-        return response.data;
+        catch (error) {
+            if ((0, axios_1.isAxiosError)(error)) {
+                return Promise.reject(new Error(JSON.stringify(error.response?.data)));
+            }
+            return Promise.reject(new Error(JSON.stringify(error)));
+        }
     }
     async uploadPost(post) {
         const query = `
@@ -64179,11 +64204,19 @@ class HashnodeAPI {
                 slug: post.slug
             }
         };
-        const response = await this.client.post(this.baseUrl, { variables, query });
-        if (response.data.errors) {
-            return Promise.reject(new Error(JSON.stringify(response.data.errors)));
+        try {
+            const response = await this.client.post(this.baseUrl, { variables, query });
+            if (response.data.errors) {
+                return Promise.reject(new Error(JSON.stringify(response.data.errors)));
+            }
+            return response.data;
         }
-        return response.data;
+        catch (error) {
+            if ((0, axios_1.isAxiosError)(error)) {
+                return Promise.reject(new Error(JSON.stringify(error.response?.data)));
+            }
+            return Promise.reject(new Error(JSON.stringify(error)));
+        }
     }
 }
 exports.HashnodeAPI = HashnodeAPI;
@@ -64219,10 +64252,14 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.computeContentHash = exports.getActionInputs = exports.extractKeywordsFromHtml = exports.extractDescriptionFromHtml = exports.extractTitleFromHtml = void 0;
+exports.slugifyText = exports.computeContentHash = exports.getActionInputs = exports.extractKeywordsFromHtml = exports.extractDescriptionFromHtml = exports.extractTitleFromHtml = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const crypto = __importStar(__nccwpck_require__(6005));
+const slugify_1 = __importDefault(__nccwpck_require__(9481));
 const schema_1 = __nccwpck_require__(2199);
 /**
  * Extracts the title from an HTML string.
@@ -64294,6 +64331,10 @@ function computeContentHash(content) {
     return hash.digest('hex');
 }
 exports.computeContentHash = computeContentHash;
+function slugifyText(text) {
+    return (0, slugify_1.default)(text, { strict: true, lower: true });
+}
+exports.slugifyText = slugifyText;
 
 
 /***/ }),

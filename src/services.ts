@@ -1,6 +1,6 @@
-import axios from 'axios'
+import axios, { isAxiosError } from 'axios'
 
-import { Post } from './schema'
+import { UploadPostSuccessResponse, Post } from './schema'
 
 export class HashnodeAPI {
   private baseUrl = 'https://gql.hashnode.com'
@@ -17,7 +17,7 @@ export class HashnodeAPI {
     this.publicationId = publicationId
   }
 
-  async uploadDraft(post: Post): Promise<any> {
+  async uploadDraft(post: Post): Promise<UploadPostSuccessResponse> {
     const query = `
       mutation PublishDraft($input: PublishDraftInput!) {
         publishDraft(input: $input) {
@@ -40,15 +40,23 @@ export class HashnodeAPI {
       }
     }
 
-    const response = await this.client.post(this.baseUrl, { variables, query })
-    if (response.data.errors) {
-      return Promise.reject(new Error(JSON.stringify(response.data.errors)))
-    }
+    try {
+      const response = await this.client.post(this.baseUrl, { variables, query })
+      if (response.data.errors) {
+        return Promise.reject(new Error(JSON.stringify(response.data.errors)))
+      }
 
-    return response.data
+      return response.data
+    } catch (error: unknown) {
+      if (isAxiosError(error)) {
+        return Promise.reject(new Error(JSON.stringify(error.response?.data)))
+      }
+
+      return Promise.reject(new Error(JSON.stringify(error)))
+    }
   }
 
-  async uploadPost(post: Post): Promise<any> {
+  async uploadPost(post: Post): Promise<UploadPostSuccessResponse> {
     const query = `
       mutation PublishPost($input: PublishPostInput!) {
         publishPost(input: $input) {
@@ -71,11 +79,19 @@ export class HashnodeAPI {
       }
     }
 
-    const response = await this.client.post(this.baseUrl, { variables, query })
-    if (response.data.errors) {
-      return Promise.reject(new Error(JSON.stringify(response.data.errors)))
-    }
+    try {
+      const response = await this.client.post(this.baseUrl, { variables, query })
+      if (response.data.errors) {
+        return Promise.reject(new Error(JSON.stringify(response.data.errors)))
+      }
 
-    return response.data
+      return response.data
+    } catch (error: unknown) {
+      if (isAxiosError(error)) {
+        return Promise.reject(new Error(JSON.stringify(error.response?.data)))
+      }
+
+      return Promise.reject(new Error(JSON.stringify(error)))
+    }
   }
 }

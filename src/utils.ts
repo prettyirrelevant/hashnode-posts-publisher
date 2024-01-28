@@ -1,5 +1,6 @@
 import * as core from '@actions/core'
 import * as crypto from 'node:crypto'
+import slugify from 'slugify'
 
 import { ActionInputsSchema, ActionInputs } from './schema'
 
@@ -76,4 +77,8 @@ export function computeContentHash(content: string): string {
   hash.update(content)
 
   return hash.digest('hex')
+}
+
+export function slugifyText(text: string): string {
+  return slugify(text, { strict: true, lower: true })
 }
