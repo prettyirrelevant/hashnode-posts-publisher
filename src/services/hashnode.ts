@@ -1,6 +1,6 @@
 import axios, { isAxiosError } from 'axios'
 
-import { UploadPostSuccessResponse, Post } from './schema'
+import { UploadPostSuccessResponse, Post } from '../schema'
 
 export class HashnodeAPI {
   private baseUrl = 'https://gql.hashnode.com'
@@ -17,14 +17,14 @@ export class HashnodeAPI {
     this.publicationId = publicationId
   }
 
-  async uploadDraft(post: Post): Promise<UploadPostSuccessResponse> {
+  async updatePost(post: Post, postId: string): Promise<void> {
     const query = `
-      mutation PublishDraft($input: PublishDraftInput!) {
-        publishDraft(input: $input) {
+    mutation UpdatePost($input: UpdatePostInput!) {
+        updatePost(input: $input) {
           post {
             id
             slug
-            title
+            url
           }
         }
       }
@@ -32,6 +32,7 @@ export class HashnodeAPI {
     const variables = {
       input: {
         ...(post.attributes.coverImageUrl && { coverImageOptions: { coverImageURL: post.attributes.coverImageUrl } }),
+        id: postId,
         publicationId: this.publicationId,
         contentMarkdown: post.content,
         title: post.attributes.title,

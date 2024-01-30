@@ -1,4 +1,3 @@
-import TurndownService from 'turndown'
 import * as core from '@actions/core'
 import * as glob from '@actions/glob'
 import * as path from 'node:path'
@@ -9,12 +8,13 @@ import {
   extractDescriptionFromHtml,
   extractKeywordsFromHtml,
   extractTitleFromHtml,
+  initTurndownService,
   computeContentHash,
   getActionInputs,
   slugifyText
 } from './utils'
-import { PostAttributes, PostSchema, Post } from './schema'
-import { HashnodeAPI } from './services'
+import { UploadPostSuccessResponse, PostAttributes, PostSchema, Post } from './schema'
+import { HashnodeAPI, LockfileAPI } from './services'
 
 /**
  * The main function for the action.
@@ -32,11 +32,12 @@ export async function run(): Promise<void> {
     ]
 
     const posts: Post[] = []
-    const turndownService = new TurndownService()
-
-    // TODO: fetch lockfile for repository and ignore posts that have not changed.
+    const turndownService = initTurndownService()
+    const hashnodeApiClient = new HashnodeAPI(inputs.accessToken, inputs.publicationId)
+    const lockfileApiClient = new LockfileAPI(process.env.GITHUB_REPOSITORY_ID as string)
 
     const globber = await glob.create(patterns.join('\n'))
+    const lockfile = await lockfileApiClient.retrieveLockfile()
     for await (const file of globber.globGenerator()) {
       console.log(`File: ${file}`)
 
@@ -45,6 +46,12 @@ export async function run(): Promise<void> {
         const markdownContent = turndownService.turndown(htmlContent)
         const title = extractTitleFromHtml(htmlContent) || path.parse(file).name
         const tags = extractKeywordsFromHtml(htmlContent) || ['hashnode']
+        const hash = computeContentHash(htmlContent)
+
+        if (lockfile?.data.content.find((content) => content.path === file && content.hash === hash)) {
+          console.log(`Skipping ${file} because it has not changed.`)
+          continue
+        }
 
         posts.push(
           PostSchema.parse({
@@ -54,47 +61,60 @@ export async function run(): Promise<void> {
               title,
               tags
             },
-            hash: computeContentHash(htmlContent),
             content: markdownContent,
-            slug: slugifyText(title)
+            slug: slugifyText(title),
+            path: file,
+            hash
           })
         )
       } else if (file.endsWith('.md')) {
         const markdownContent = fs.readFileSync(file, { encoding: 'utf8' })
         const formattedMarkdown = fm<PostAttributes>(markdownContent)
-        if (formattedMarkdown.attributes.draft && inputs.ignoreDrafts) {
+        const hash = computeContentHash(markdownContent)
+        if (formattedMarkdown.attributes.draft) {
+          continue
+        }
+
+        if (lockfile?.data.content.find((content) => content.path === file && content.hash === hash)) {
+          console.log(`Skipping ${file} because it has not changed.`)
           continue
         }
 
         posts.push(
           PostSchema.parse({
             slug: slugifyText(formattedMarkdown.attributes.title),
-            hash: computeContentHash(markdownContent),
             attributes: formattedMarkdown.attributes,
-            content: formattedMarkdown.body
+            content: formattedMarkdown.body,
+            path: file,
+            hash
           })
         )
       }
     }
-    console.log(`Found ${posts.length} posts.`)
 
     // TODO: handle audio files.
-    // TODO: generate lockfile to avoid duplicate posts.
-    const hashnodeApiClient = new HashnodeAPI(inputs.accessToken, inputs.publicationId)
+
+    // this can be made more efficient but it's fine for now -- i guess.
     const results = await Promise.allSettled(
       posts.map(async (post) =>
-        // post.attributes.draft ? hashnodeApiClient.uploadDraft(post) : hashnodeApiClient.uploadPost(post)
-        hashnodeApiClient.uploadPost(post)
+        lockfile?.data.content.find((content) => content.path === post.path && content.hash !== post.hash)
+          ? hashnodeApiClient.updatePost(
+              post,
+              lockfile?.data.content.find((content) => content.path === post.path && content.hash !== post.hash)
+                ?.id as string
+            )
+          : hashnodeApiClient.uploadPost(post)
       )
     )
-    console.log(`Finished uploading ${results.length} posts.`)
 
-    // TODO: write successful results to lockfile
+    const successfulResults = results.filter(
+      (result) => result.status === 'fulfilled'
+    ) as PromiseFulfilledResult<UploadPostSuccessResponse>[]
 
-    results.map((result) =>
-      result.status === 'fulfilled'
-        ? console.log(result.status, result.value.data)
-        : console.log(result.status, result.reason)
+    await lockfileApiClient.updateLockfile(
+      posts,
+      successfulResults.map((result) => result.value),
+      lockfile?.data
     )
   } catch (error) {
     // Fail the workflow run if an error occurs

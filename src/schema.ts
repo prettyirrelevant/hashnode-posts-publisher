@@ -8,7 +8,6 @@ export const ActionInputsSchema = z.object({
     const formats = value.split(',').map((format) => format.trim())
     return formats.map((format) => SupportedFormatsSchema.parse(format))
   }),
-  ignoreDrafts: z.boolean().default(false),
   openaiApiKey: z.string().nullish(),
   postsDirectory: z.string(),
   publicationId: z.string(),
@@ -30,7 +29,8 @@ export const PostSchema = z.object({
   imageUrl: z.string().nullish(),
   content: z.string(),
   slug: z.string(),
-  hash: z.string()
+  hash: z.string(),
+  path: z.string()
 })
 export type Post = z.infer<typeof PostSchema>
 

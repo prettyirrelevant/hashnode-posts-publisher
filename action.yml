@@ -17,15 +17,10 @@ inputs:
     description: 'The Hashnode API access token.'
     required: true
 
-  ignore-drafts:
-    description: 'Whether to exclude draft posts from publishing to Hashnode.'
-    required: false
-    default: 'false'
-
   posts-directory:
     description: 'The local directory containing the blog posts.'
     required: false
-    default: "posts"
+    default: 'posts'
 
   supported-formats:
     description: 'The allowed file formats for blog posts.'

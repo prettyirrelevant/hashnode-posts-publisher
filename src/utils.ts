@@ -1,3 +1,4 @@
+import TurndownService from 'turndown'
 import * as core from '@actions/core'
 import * as crypto from 'node:crypto'
 import slugify from 'slugify'
@@ -8,7 +9,7 @@ import { ActionInputsSchema, ActionInputs } from './schema'
  * Extracts the title from an HTML string.
  *
  * @param html - The HTML string to extract the title from.
- * @returns {string | null} The extracted title or null if no title is found.
+ * @returns The extracted title or null if no title is found.
  */
 export function extractTitleFromHtml(html: string): string | null {
   const titleMatch = /<title>(.*?)<\/title>/i.exec(html)
@@ -52,13 +53,12 @@ export function extractKeywordsFromHtml(html: string): string[] | null {
 
 /**
  * Gets the inputs for the action.
- * @returns {ActionInputs} The inputs for the action.
+ * @returns The inputs for the action.
  */
 export function getActionInputs(): ActionInputs {
   const accessToken: string = core.getInput('access-token')
   const openaiApiKey: string = core.getInput('openai-api-key')
   const publicationId: string = core.getInput('publication-id')
-  const ignoreDrafts: boolean = core.getBooleanInput('ignore-drafts')
   const rawSupportedFormats: string = core.getInput('supported-formats')
   const postsDirectory: string = core.toPlatformPath(core.getInput('posts-directory'))
 
@@ -67,11 +67,16 @@ export function getActionInputs(): ActionInputs {
     postsDirectory,
     publicationId,
     openaiApiKey,
-    ignoreDrafts,
     accessToken
   })
 }
 
+/**
+ * Computes the SHA256 hash of the given content.
+ *
+ * @param content - The content to compute the hash for.
+ * @returns The computed hash as a hexadecimal string.
+ */
 export function computeContentHash(content: string): string {
   const hash = crypto.createHash('sha256')
   hash.update(content)
@@ -79,6 +84,18 @@ export function computeContentHash(content: string): string {
   return hash.digest('hex')
 }
 
+/**
+ * Converts a given text into a slug by removing special characters and converting to lowercase.
+ * @param text - The text to be slugified.
+ * @returns The slugified version of the text.
+ */
 export function slugifyText(text: string): string {
   return slugify(text, { strict: true, lower: true })
+}
+
+export function initTurndownService(): TurndownService {
+  const turndownService = new TurndownService()
+  turndownService.remove('title') // Remove title from HTML output.
+
+  return turndownService
 }
