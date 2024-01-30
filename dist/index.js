@@ -64013,7 +64013,7 @@ async function run() {
                 const title = (0, utils_1.extractTitleFromHtml)(htmlContent) || path.parse(file).name;
                 const tags = (0, utils_1.extractKeywordsFromHtml)(htmlContent) || ['hashnode'];
                 const hash = (0, utils_1.computeContentHash)(htmlContent);
-                if (lockfile?.data.content.find((content) => content.path === file && content.hash === hash)) {
+                if (lockfile.data?.content.find((content) => content.path === file && content.hash === hash)) {
                     (0, utils_1.log)(`Skipping ${file} because it has not changed.`);
                     continue;
                 }
@@ -64037,7 +64037,7 @@ async function run() {
                 if (formattedMarkdown.attributes.draft) {
                     continue;
                 }
-                if (lockfile?.data.content.find((content) => content.path === file && content.hash === hash)) {
+                if (lockfile.data?.content.find((content) => content.path === file && content.hash === hash)) {
                     (0, utils_1.log)(`Skipping ${file} because it has not changed.`);
                     continue;
                 }
@@ -64052,8 +64052,8 @@ async function run() {
         }
         // TODO: handle audio files.
         // this can be made more efficient but it's fine for now -- i guess.
-        const results = await Promise.allSettled(posts.map(async (post) => lockfile?.data.content.find((content) => content.path === post.path && content.hash !== post.hash)
-            ? hashnodeApiClient.updatePost(post, lockfile?.data.content.find((content) => content.path === post.path && content.hash !== post.hash)
+        const results = await Promise.allSettled(posts.map(async (post) => lockfile.data?.content.find((content) => content.path === post.path && content.hash !== post.hash)
+            ? hashnodeApiClient.updatePost(post, lockfile.data?.content.find((content) => content.path === post.path && content.hash !== post.hash)
                 ?.id)
             : hashnodeApiClient.uploadPost(post)));
         const successfulResults = results.filter((result) => result.status === 'fulfilled');
@@ -64258,12 +64258,32 @@ Object.defineProperty(exports, "LockfileAPI", ({ enumerable: true, get: function
 
 "use strict";
 
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LockfileAPI = void 0;
-const axios_1 = __importDefault(__nccwpck_require__(8757));
+const axios_1 = __importStar(__nccwpck_require__(8757));
 class LockfileAPI {
     baseUrl = 'https://salty-inlet-70255-aa12f0db37c0.herokuapp.com';
     client;
@@ -64298,8 +64318,19 @@ class LockfileAPI {
         return response.data;
     }
     async retrieveLockfile() {
-        const response = await this.client.get(`/lockfiles/${this.repositoryId}`);
-        return response.data;
+        try {
+            const response = await this.client.get(`/lockfiles/${this.repositoryId}`);
+            return response.data;
+        }
+        catch (error) {
+            if ((0, axios_1.isAxiosError)(error)) {
+                if (error.response?.status === 404) {
+                    return { data: undefined };
+                }
+                return Promise.reject(new Error(JSON.stringify(error.response?.data)));
+            }
+            return Promise.reject(error);
+        }
     }
 }
 exports.LockfileAPI = LockfileAPI;

@@ -52,7 +52,7 @@ export async function run(): Promise<void> {
         const tags = extractKeywordsFromHtml(htmlContent) || ['hashnode']
         const hash = computeContentHash(htmlContent)
 
-        if (lockfile?.data.content.find((content) => content.path === file && content.hash === hash)) {
+        if (lockfile.data?.content.find((content) => content.path === file && content.hash === hash)) {
           log(`Skipping ${file} because it has not changed.`)
           continue
         }
@@ -79,7 +79,7 @@ export async function run(): Promise<void> {
           continue
         }
 
-        if (lockfile?.data.content.find((content) => content.path === file && content.hash === hash)) {
+        if (lockfile.data?.content.find((content) => content.path === file && content.hash === hash)) {
           log(`Skipping ${file} because it has not changed.`)
           continue
         }
@@ -101,10 +101,10 @@ export async function run(): Promise<void> {
     // this can be made more efficient but it's fine for now -- i guess.
     const results = await Promise.allSettled(
       posts.map(async (post) =>
-        lockfile?.data.content.find((content) => content.path === post.path && content.hash !== post.hash)
+        lockfile.data?.content.find((content) => content.path === post.path && content.hash !== post.hash)
           ? hashnodeApiClient.updatePost(
               post,
-              lockfile?.data.content.find((content) => content.path === post.path && content.hash !== post.hash)
+              lockfile.data?.content.find((content) => content.path === post.path && content.hash !== post.hash)
                 ?.id as string
             )
           : hashnodeApiClient.uploadPost(post)

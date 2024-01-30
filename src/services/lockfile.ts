@@ -1,4 +1,4 @@
-import axios from 'axios'
+import axios, { isAxiosError } from 'axios'
 
 import { UploadPostSuccessResponse, Post } from '../schema'
 
@@ -7,7 +7,7 @@ interface UpdateLockfileResponse {
 }
 
 interface RetrieveLockfileResponse {
-  data: Lockfile
+  data?: Lockfile
 }
 
 interface Lockfile {
@@ -74,7 +74,18 @@ export class LockfileAPI {
   }
 
   async retrieveLockfile(): Promise<RetrieveLockfileResponse> {
-    const response = await this.client.get<RetrieveLockfileResponse>(`/lockfiles/${this.repositoryId}`)
-    return response.data
+    try {
+      const response = await this.client.get<RetrieveLockfileResponse>(`/lockfiles/${this.repositoryId}`)
+      return response.data
+    } catch (error: unknown) {
+      if (isAxiosError(error)) {
+        if (error.response?.status === 404) {
+          return { data: undefined }
+        }
+        return Promise.reject(new Error(JSON.stringify(error.response?.data)))
+      }
+
+      return Promise.reject(error)
+    }
   }
 }
