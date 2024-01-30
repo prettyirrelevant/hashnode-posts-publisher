@@ -11,7 +11,8 @@ import {
   initTurndownService,
   computeContentHash,
   getActionInputs,
-  slugifyText
+  slugifyText,
+  log
 } from './utils'
 import { UploadPostSuccessResponse, PostAttributes, PostSchema, Post } from './schema'
 import { HashnodeAPI, LockfileAPI } from './services'
@@ -26,20 +27,23 @@ export async function run(): Promise<void> {
     const excludePatterns = ['README.md', 'LICENSE.md', 'CONTRIBUTING.md'].map((file) =>
       core.toPlatformPath(`!${inputs.postsDirectory}/${file}`)
     )
+
     const patterns = [
       ...excludePatterns,
       ...inputs.supportedFormats.map((format) => core.toPlatformPath(`${inputs.postsDirectory}/**/*.${format}`))
     ]
-
     const posts: Post[] = []
     const turndownService = initTurndownService()
     const hashnodeApiClient = new HashnodeAPI(inputs.accessToken, inputs.publicationId)
     const lockfileApiClient = new LockfileAPI(process.env.GITHUB_REPOSITORY_ID as string)
 
     const globber = await glob.create(patterns.join('\n'))
+
+    log('Retrieving lockfile...')
     const lockfile = await lockfileApiClient.retrieveLockfile()
+
     for await (const file of globber.globGenerator()) {
-      console.log(`File: ${file}`)
+      log(`Processing file: ${file}`)
 
       if (file.endsWith('.html')) {
         const htmlContent = fs.readFileSync(file, { encoding: 'utf8' })
@@ -49,7 +53,7 @@ export async function run(): Promise<void> {
         const hash = computeContentHash(htmlContent)
 
         if (lockfile?.data.content.find((content) => content.path === file && content.hash === hash)) {
-          console.log(`Skipping ${file} because it has not changed.`)
+          log(`Skipping ${file} because it has not changed.`)
           continue
         }
 
@@ -76,7 +80,7 @@ export async function run(): Promise<void> {
         }
 
         if (lockfile?.data.content.find((content) => content.path === file && content.hash === hash)) {
-          console.log(`Skipping ${file} because it has not changed.`)
+          log(`Skipping ${file} because it has not changed.`)
           continue
         }
 
@@ -116,8 +120,13 @@ export async function run(): Promise<void> {
       successfulResults.map((result) => result.value),
       lockfile?.data
     )
+
+    log('Action completed successfully.')
   } catch (error) {
     // Fail the workflow run if an error occurs
-    if (error instanceof Error) core.setFailed(error.message)
+    if (error instanceof Error) {
+      log(`Error occurred: ${error.message}`)
+      core.setFailed(error.message)
+    }
   }
 }

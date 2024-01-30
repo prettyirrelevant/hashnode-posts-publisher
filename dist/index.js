@@ -64003,9 +64003,10 @@ async function run() {
         const hashnodeApiClient = new services_1.HashnodeAPI(inputs.accessToken, inputs.publicationId);
         const lockfileApiClient = new services_1.LockfileAPI(process.env.GITHUB_REPOSITORY_ID);
         const globber = await glob.create(patterns.join('\n'));
+        (0, utils_1.log)('Retrieving lockfile...');
         const lockfile = await lockfileApiClient.retrieveLockfile();
         for await (const file of globber.globGenerator()) {
-            console.log(`File: ${file}`);
+            (0, utils_1.log)(`Processing file: ${file}`);
             if (file.endsWith('.html')) {
                 const htmlContent = fs.readFileSync(file, { encoding: 'utf8' });
                 const markdownContent = turndownService.turndown(htmlContent);
@@ -64013,7 +64014,7 @@ async function run() {
                 const tags = (0, utils_1.extractKeywordsFromHtml)(htmlContent) || ['hashnode'];
                 const hash = (0, utils_1.computeContentHash)(htmlContent);
                 if (lockfile?.data.content.find((content) => content.path === file && content.hash === hash)) {
-                    console.log(`Skipping ${file} because it has not changed.`);
+                    (0, utils_1.log)(`Skipping ${file} because it has not changed.`);
                     continue;
                 }
                 posts.push(schema_1.PostSchema.parse({
@@ -64037,7 +64038,7 @@ async function run() {
                     continue;
                 }
                 if (lockfile?.data.content.find((content) => content.path === file && content.hash === hash)) {
-                    console.log(`Skipping ${file} because it has not changed.`);
+                    (0, utils_1.log)(`Skipping ${file} because it has not changed.`);
                     continue;
                 }
                 posts.push(schema_1.PostSchema.parse({
@@ -64057,11 +64058,14 @@ async function run() {
             : hashnodeApiClient.uploadPost(post)));
         const successfulResults = results.filter((result) => result.status === 'fulfilled');
         await lockfileApiClient.updateLockfile(posts, successfulResults.map((result) => result.value), lockfile?.data);
+        (0, utils_1.log)('Action completed successfully.');
     }
     catch (error) {
         // Fail the workflow run if an error occurs
-        if (error instanceof Error)
+        if (error instanceof Error) {
+            (0, utils_1.log)(`Error occurred: ${error.message}`);
             core.setFailed(error.message);
+        }
     }
 }
 exports.run = run;
@@ -64270,7 +64274,7 @@ class LockfileAPI {
     }
     async updateLockfile(allPosts, successfulUploads, currentLockfile) {
         if (!currentLockfile) {
-            return null;
+            return Promise.reject(new Error('Lockfile not found.'));
         }
         const succesfullyUploadedPosts = allPosts.filter((post) => successfulUploads.find((upload) => upload.data.publishPost.post.slug === post.slug));
         currentLockfile.content = currentLockfile.content.map((content) => {
@@ -64286,26 +64290,16 @@ class LockfileAPI {
                 hash: post.hash
             };
         });
-        try {
-            const payload = {
-                repositoryName: process.env.GITHUB_REPOSITORY,
-                posts: currentLockfile.content
-            };
-            const response = await this.client.put(`/lockfiles/${this.repositoryId}`, payload);
-            return response.data;
-        }
-        catch (error) {
-            return null;
-        }
+        const payload = {
+            repositoryName: process.env.GITHUB_REPOSITORY,
+            posts: currentLockfile.content
+        };
+        const response = await this.client.put(`/lockfiles/${this.repositoryId}`, payload);
+        return response.data;
     }
     async retrieveLockfile() {
-        try {
-            const response = await this.client.get(`/lockfiles/${this.repositoryId}`);
-            return response.data;
-        }
-        catch (error) {
-            return null;
-        }
+        const response = await this.client.get(`/lockfiles/${this.repositoryId}`);
+        return response.data;
     }
 }
 exports.LockfileAPI = LockfileAPI;
@@ -64345,7 +64339,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.initTurndownService = exports.slugifyText = exports.computeContentHash = exports.getActionInputs = exports.extractKeywordsFromHtml = exports.extractDescriptionFromHtml = exports.extractTitleFromHtml = void 0;
+exports.log = exports.initTurndownService = exports.slugifyText = exports.computeContentHash = exports.getActionInputs = exports.extractKeywordsFromHtml = exports.extractDescriptionFromHtml = exports.extractTitleFromHtml = void 0;
 const turndown_1 = __importDefault(__nccwpck_require__(4800));
 const core = __importStar(__nccwpck_require__(2186));
 const crypto = __importStar(__nccwpck_require__(6005));
@@ -64440,6 +64434,11 @@ function initTurndownService() {
     return turndownService;
 }
 exports.initTurndownService = initTurndownService;
+// Utility function to log messages
+function log(message) {
+    core.info(message);
+}
+exports.log = log;
 
 
 /***/ }),

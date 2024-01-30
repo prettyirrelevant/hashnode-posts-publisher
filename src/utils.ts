@@ -99,3 +99,8 @@ export function initTurndownService(): TurndownService {
 
   return turndownService
 }
+
+// Utility function to log messages
+export function log(message: string): void {
+  core.info(message)
+}

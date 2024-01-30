@@ -40,9 +40,9 @@ export class LockfileAPI {
     allPosts: Post[],
     successfulUploads: UploadPostSuccessResponse[],
     currentLockfile?: Lockfile
-  ): Promise<UpdateLockfileResponse | null> {
+  ): Promise<UpdateLockfileResponse> {
     if (!currentLockfile) {
-      return null
+      return Promise.reject(new Error('Lockfile not found.'))
     }
 
     const succesfullyUploadedPosts = allPosts.filter((post) =>
@@ -65,24 +65,16 @@ export class LockfileAPI {
       }
     })
 
-    try {
-      const payload = {
-        repositoryName: process.env.GITHUB_REPOSITORY as string,
-        posts: currentLockfile.content
-      }
-      const response = await this.client.put<UpdateLockfileResponse>(`/lockfiles/${this.repositoryId}`, payload)
-      return response.data
-    } catch (error) {
-      return null
+    const payload = {
+      repositoryName: process.env.GITHUB_REPOSITORY as string,
+      posts: currentLockfile.content
     }
+    const response = await this.client.put<UpdateLockfileResponse>(`/lockfiles/${this.repositoryId}`, payload)
+    return response.data
   }
 
-  async retrieveLockfile(): Promise<RetrieveLockfileResponse | null> {
-    try {
-      const response = await this.client.get<RetrieveLockfileResponse>(`/lockfiles/${this.repositoryId}`)
-      return response.data
-    } catch (error) {
-      return null
-    }
+  async retrieveLockfile(): Promise<RetrieveLockfileResponse> {
+    const response = await this.client.get<RetrieveLockfileResponse>(`/lockfiles/${this.repositoryId}`)
+    return response.data
   }
 }
