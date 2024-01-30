@@ -3537,7 +3537,7 @@ function range(a, b, str) {
 
 /***/ }),
 
-/***/ 9850:
+/***/ 3717:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 var concatMap = __nccwpck_require__(6891);
@@ -4938,7 +4938,7 @@ DelayedStream.prototype._checkIfMaxDataSizeExceeded = function() {
 
 /***/ }),
 
-/***/ 3717:
+/***/ 4472:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -26018,7 +26018,7 @@ module.exports = {
 
 var Node = __nccwpck_require__(3479);
 var Element = __nccwpck_require__(4374);
-var CSSStyleDeclaration = __nccwpck_require__(3717);
+var CSSStyleDeclaration = __nccwpck_require__(4472);
 var utils = __nccwpck_require__(5594);
 var URLUtils = __nccwpck_require__(5863);
 var defineElement = __nccwpck_require__(1107);
@@ -27453,7 +27453,7 @@ define({
 var utils = __nccwpck_require__(5594);
 
 exports = module.exports = {
-  CSSStyleDeclaration: __nccwpck_require__(3717),
+  CSSStyleDeclaration: __nccwpck_require__(4472),
   CharacterData: __nccwpck_require__(1459),
   Comment: __nccwpck_require__(8066),
   DOMException: __nccwpck_require__(4627),
@@ -28543,7 +28543,7 @@ module.exports = {
 var Element = __nccwpck_require__(4374);
 var defineElement = __nccwpck_require__(1107);
 var utils = __nccwpck_require__(5594);
-var CSSStyleDeclaration = __nccwpck_require__(3717);
+var CSSStyleDeclaration = __nccwpck_require__(4472);
 
 var svgElements = exports.elements = {};
 var svgNameToImpl = Object.create(null);
@@ -34515,7 +34515,7 @@ var path = (function () { try { return __nccwpck_require__(1017) } catch (e) {}}
 minimatch.sep = path.sep
 
 var GLOBSTAR = minimatch.GLOBSTAR = Minimatch.GLOBSTAR = {}
-var expand = __nccwpck_require__(9850)
+var expand = __nccwpck_require__(3717)
 
 var plTypes = {
   '!': { open: '(?:(?!(?:', close: '))[^/]*?)'},
@@ -63978,7 +63978,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = void 0;
-const turndown_1 = __importDefault(__nccwpck_require__(4800));
 const core = __importStar(__nccwpck_require__(2186));
 const glob = __importStar(__nccwpck_require__(8090));
 const path = __importStar(__nccwpck_require__(9411));
@@ -63986,7 +63985,7 @@ const fs = __importStar(__nccwpck_require__(7561));
 const front_matter_1 = __importDefault(__nccwpck_require__(7646));
 const utils_1 = __nccwpck_require__(1314);
 const schema_1 = __nccwpck_require__(2199);
-const services_1 = __nccwpck_require__(3711);
+const services_1 = __nccwpck_require__(720);
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
@@ -64000,9 +63999,11 @@ async function run() {
             ...inputs.supportedFormats.map((format) => core.toPlatformPath(`${inputs.postsDirectory}/**/*.${format}`))
         ];
         const posts = [];
-        const turndownService = new turndown_1.default();
-        // TODO: fetch lockfile for repository and ignore posts that have not changed.
+        const turndownService = (0, utils_1.initTurndownService)();
+        const hashnodeApiClient = new services_1.HashnodeAPI(inputs.accessToken, inputs.publicationId);
+        const lockfileApiClient = new services_1.LockfileAPI(process.env.GITHUB_REPOSITORY_ID);
         const globber = await glob.create(patterns.join('\n'));
+        const lockfile = await lockfileApiClient.retrieveLockfile();
         for await (const file of globber.globGenerator()) {
             console.log(`File: ${file}`);
             if (file.endsWith('.html')) {
@@ -64010,6 +64011,11 @@ async function run() {
                 const markdownContent = turndownService.turndown(htmlContent);
                 const title = (0, utils_1.extractTitleFromHtml)(htmlContent) || path.parse(file).name;
                 const tags = (0, utils_1.extractKeywordsFromHtml)(htmlContent) || ['hashnode'];
+                const hash = (0, utils_1.computeContentHash)(htmlContent);
+                if (lockfile?.data.content.find((content) => content.path === file && content.hash === hash)) {
+                    console.log(`Skipping ${file} because it has not changed.`);
+                    continue;
+                }
                 posts.push(schema_1.PostSchema.parse({
                     attributes: {
                         description: (0, utils_1.extractDescriptionFromHtml)(htmlContent),
@@ -64017,37 +64023,40 @@ async function run() {
                         title,
                         tags
                     },
-                    hash: (0, utils_1.computeContentHash)(htmlContent),
                     content: markdownContent,
-                    slug: (0, utils_1.slugifyText)(title)
+                    slug: (0, utils_1.slugifyText)(title),
+                    path: file,
+                    hash
                 }));
             }
             else if (file.endsWith('.md')) {
                 const markdownContent = fs.readFileSync(file, { encoding: 'utf8' });
                 const formattedMarkdown = (0, front_matter_1.default)(markdownContent);
-                if (formattedMarkdown.attributes.draft && inputs.ignoreDrafts) {
+                const hash = (0, utils_1.computeContentHash)(markdownContent);
+                if (formattedMarkdown.attributes.draft) {
+                    continue;
+                }
+                if (lockfile?.data.content.find((content) => content.path === file && content.hash === hash)) {
+                    console.log(`Skipping ${file} because it has not changed.`);
                     continue;
                 }
                 posts.push(schema_1.PostSchema.parse({
                     slug: (0, utils_1.slugifyText)(formattedMarkdown.attributes.title),
-                    hash: (0, utils_1.computeContentHash)(markdownContent),
                     attributes: formattedMarkdown.attributes,
-                    content: formattedMarkdown.body
+                    content: formattedMarkdown.body,
+                    path: file,
+                    hash
                 }));
             }
         }
-        console.log(`Found ${posts.length} posts.`);
         // TODO: handle audio files.
-        // TODO: generate lockfile to avoid duplicate posts.
-        const hashnodeApiClient = new services_1.HashnodeAPI(inputs.accessToken, inputs.publicationId);
-        const results = await Promise.allSettled(posts.map(async (post) => 
-        // post.attributes.draft ? hashnodeApiClient.uploadDraft(post) : hashnodeApiClient.uploadPost(post)
-        hashnodeApiClient.uploadPost(post)));
-        console.log(`Finished uploading ${results.length} posts.`);
-        // TODO: write successful results to lockfile
-        results.map((result) => result.status === 'fulfilled'
-            ? console.log(result.status, result.value.data)
-            : console.log(result.status, result.reason));
+        // this can be made more efficient but it's fine for now -- i guess.
+        const results = await Promise.allSettled(posts.map(async (post) => lockfile?.data.content.find((content) => content.path === post.path && content.hash !== post.hash)
+            ? hashnodeApiClient.updatePost(post, lockfile?.data.content.find((content) => content.path === post.path && content.hash !== post.hash)
+                ?.id)
+            : hashnodeApiClient.uploadPost(post)));
+        const successfulResults = results.filter((result) => result.status === 'fulfilled');
+        await lockfileApiClient.updateLockfile(posts, successfulResults.map((result) => result.value), lockfile?.data);
     }
     catch (error) {
         // Fail the workflow run if an error occurs
@@ -64078,7 +64087,6 @@ exports.ActionInputsSchema = zod_1.z.object({
         const formats = value.split(',').map((format) => format.trim());
         return formats.map((format) => SupportedFormatsSchema.parse(format));
     }),
-    ignoreDrafts: zod_1.z.boolean().default(false),
     openaiApiKey: zod_1.z.string().nullish(),
     postsDirectory: zod_1.z.string(),
     publicationId: zod_1.z.string(),
@@ -64096,13 +64104,14 @@ exports.PostSchema = zod_1.z.object({
     imageUrl: zod_1.z.string().nullish(),
     content: zod_1.z.string(),
     slug: zod_1.z.string(),
-    hash: zod_1.z.string()
+    hash: zod_1.z.string(),
+    path: zod_1.z.string()
 });
 
 
 /***/ }),
 
-/***/ 3711:
+/***/ 125:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -64146,14 +64155,14 @@ class HashnodeAPI {
         });
         this.publicationId = publicationId;
     }
-    async uploadDraft(post) {
+    async updatePost(post, postId) {
         const query = `
-      mutation PublishDraft($input: PublishDraftInput!) {
-        publishDraft(input: $input) {
+    mutation UpdatePost($input: UpdatePostInput!) {
+        updatePost(input: $input) {
           post {
             id
             slug
-            title
+            url
           }
         }
       }
@@ -64161,6 +64170,7 @@ class HashnodeAPI {
         const variables = {
             input: {
                 ...(post.attributes.coverImageUrl && { coverImageOptions: { coverImageURL: post.attributes.coverImageUrl } }),
+                id: postId,
                 publicationId: this.publicationId,
                 contentMarkdown: post.content,
                 title: post.attributes.title,
@@ -64224,6 +64234,85 @@ exports.HashnodeAPI = HashnodeAPI;
 
 /***/ }),
 
+/***/ 720:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.LockfileAPI = exports.HashnodeAPI = void 0;
+const hashnode_1 = __nccwpck_require__(125);
+Object.defineProperty(exports, "HashnodeAPI", ({ enumerable: true, get: function () { return hashnode_1.HashnodeAPI; } }));
+const lockfile_1 = __nccwpck_require__(6354);
+Object.defineProperty(exports, "LockfileAPI", ({ enumerable: true, get: function () { return lockfile_1.LockfileAPI; } }));
+
+
+/***/ }),
+
+/***/ 6354:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.LockfileAPI = void 0;
+const axios_1 = __importDefault(__nccwpck_require__(8757));
+class LockfileAPI {
+    baseUrl = 'https://salty-inlet-70255-aa12f0db37c0.herokuapp.com';
+    client;
+    repositoryId;
+    constructor(repositoryId) {
+        this.repositoryId = repositoryId;
+        this.client = axios_1.default.create({ baseURL: this.baseUrl, timeout: 5000 });
+    }
+    async updateLockfile(allPosts, successfulUploads, currentLockfile) {
+        if (!currentLockfile) {
+            return null;
+        }
+        const succesfullyUploadedPosts = allPosts.filter((post) => successfulUploads.find((upload) => upload.data.publishPost.post.slug === post.slug));
+        currentLockfile.content = currentLockfile.content.map((content) => {
+            const post = succesfullyUploadedPosts.find((entry) => entry.path === content.path);
+            if (!post) {
+                return content;
+            }
+            const upload = successfulUploads.find((entry) => entry.data.publishPost.post.slug === post.slug);
+            return {
+                ...content,
+                id: upload?.data.publishPost.post.id,
+                url: upload?.data.publishPost.post.url,
+                hash: post.hash
+            };
+        });
+        try {
+            const payload = {
+                repositoryName: process.env.GITHUB_REPOSITORY,
+                posts: currentLockfile.content
+            };
+            const response = await this.client.put(`/lockfiles/${this.repositoryId}`, payload);
+            return response.data;
+        }
+        catch (error) {
+            return null;
+        }
+    }
+    async retrieveLockfile() {
+        try {
+            const response = await this.client.get(`/lockfiles/${this.repositoryId}`);
+            return response.data;
+        }
+        catch (error) {
+            return null;
+        }
+    }
+}
+exports.LockfileAPI = LockfileAPI;
+
+
+/***/ }),
+
 /***/ 1314:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -64256,7 +64345,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.slugifyText = exports.computeContentHash = exports.getActionInputs = exports.extractKeywordsFromHtml = exports.extractDescriptionFromHtml = exports.extractTitleFromHtml = void 0;
+exports.initTurndownService = exports.slugifyText = exports.computeContentHash = exports.getActionInputs = exports.extractKeywordsFromHtml = exports.extractDescriptionFromHtml = exports.extractTitleFromHtml = void 0;
+const turndown_1 = __importDefault(__nccwpck_require__(4800));
 const core = __importStar(__nccwpck_require__(2186));
 const crypto = __importStar(__nccwpck_require__(6005));
 const slugify_1 = __importDefault(__nccwpck_require__(9481));
@@ -64265,7 +64355,7 @@ const schema_1 = __nccwpck_require__(2199);
  * Extracts the title from an HTML string.
  *
  * @param html - The HTML string to extract the title from.
- * @returns {string | null} The extracted title or null if no title is found.
+ * @returns The extracted title or null if no title is found.
  */
 function extractTitleFromHtml(html) {
     const titleMatch = /<title>(.*?)<\/title>/i.exec(html);
@@ -64306,13 +64396,12 @@ function extractKeywordsFromHtml(html) {
 exports.extractKeywordsFromHtml = extractKeywordsFromHtml;
 /**
  * Gets the inputs for the action.
- * @returns {ActionInputs} The inputs for the action.
+ * @returns The inputs for the action.
  */
 function getActionInputs() {
     const accessToken = core.getInput('access-token');
     const openaiApiKey = core.getInput('openai-api-key');
     const publicationId = core.getInput('publication-id');
-    const ignoreDrafts = core.getBooleanInput('ignore-drafts');
     const rawSupportedFormats = core.getInput('supported-formats');
     const postsDirectory = core.toPlatformPath(core.getInput('posts-directory'));
     return schema_1.ActionInputsSchema.parse({
@@ -64320,21 +64409,37 @@ function getActionInputs() {
         postsDirectory,
         publicationId,
         openaiApiKey,
-        ignoreDrafts,
         accessToken
     });
 }
 exports.getActionInputs = getActionInputs;
+/**
+ * Computes the SHA256 hash of the given content.
+ *
+ * @param content - The content to compute the hash for.
+ * @returns The computed hash as a hexadecimal string.
+ */
 function computeContentHash(content) {
     const hash = crypto.createHash('sha256');
     hash.update(content);
     return hash.digest('hex');
 }
 exports.computeContentHash = computeContentHash;
+/**
+ * Converts a given text into a slug by removing special characters and converting to lowercase.
+ * @param text - The text to be slugified.
+ * @returns The slugified version of the text.
+ */
 function slugifyText(text) {
     return (0, slugify_1.default)(text, { strict: true, lower: true });
 }
 exports.slugifyText = slugifyText;
+function initTurndownService() {
+    const turndownService = new turndown_1.default();
+    turndownService.remove('title'); // Remove title from HTML output.
+    return turndownService;
+}
+exports.initTurndownService = initTurndownService;
 
 
 /***/ }),
