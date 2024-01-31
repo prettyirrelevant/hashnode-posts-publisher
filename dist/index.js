@@ -64002,9 +64002,9 @@ async function run() {
         const turndownService = (0, utils_1.initTurndownService)();
         const hashnodeApiClient = new services_1.HashnodeAPI(inputs.accessToken, inputs.publicationId);
         const lockfileApiClient = new services_1.LockfileAPI(process.env.GITHUB_REPOSITORY_ID);
-        const globber = await glob.create(patterns.join('\n'));
-        (0, utils_1.log)('Retrieving lockfile...');
         const lockfile = await lockfileApiClient.retrieveLockfile();
+        console.log(lockfile, 'lockfile');
+        const globber = await glob.create(patterns.join('\n'));
         for await (const file of globber.globGenerator()) {
             (0, utils_1.log)(`Processing file: ${file}`);
             if (file.endsWith('.html')) {

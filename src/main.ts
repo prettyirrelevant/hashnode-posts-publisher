@@ -37,11 +37,9 @@ export async function run(): Promise<void> {
     const hashnodeApiClient = new HashnodeAPI(inputs.accessToken, inputs.publicationId)
     const lockfileApiClient = new LockfileAPI(process.env.GITHUB_REPOSITORY_ID as string)
 
-    const globber = await glob.create(patterns.join('\n'))
-
-    log('Retrieving lockfile...')
     const lockfile = await lockfileApiClient.retrieveLockfile()
-
+    console.log(lockfile, 'lockfile')
+    const globber = await glob.create(patterns.join('\n'))
     for await (const file of globber.globGenerator()) {
       log(`Processing file: ${file}`)
 
