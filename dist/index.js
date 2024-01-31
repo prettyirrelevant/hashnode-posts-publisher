@@ -64061,9 +64061,7 @@ async function run() {
         (0, utils_1.log)('Action completed successfully.');
     }
     catch (error) {
-        // Fail the workflow run if an error occurs
         if (error instanceof Error) {
-            (0, utils_1.log)(`Error occurred: ${error.message}`);
             core.setFailed(error.message);
         }
     }
@@ -64323,13 +64321,9 @@ class LockfileAPI {
             return response.data;
         }
         catch (error) {
-            if ((0, axios_1.isAxiosError)(error)) {
-                if (error.response?.status === 404) {
-                    return { data: undefined };
-                }
-                return Promise.reject(new Error(JSON.stringify(error.response?.data)));
-            }
-            return Promise.reject(error);
+            return (0, axios_1.isAxiosError)(error)
+                ? Promise.reject(new Error(JSON.stringify(error.response?.data)))
+                : Promise.reject(error);
         }
     }
 }
