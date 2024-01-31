@@ -1,6 +1,7 @@
 import axios, { isAxiosError } from 'axios'
 
 import { UploadPostSuccessResponse, UpdatePostSuccessResponse, Post } from '../schema'
+import { log } from '../utils'
 
 export class HashnodeAPI {
   private baseUrl = 'https://gql.hashnode.com'
@@ -48,6 +49,7 @@ export class HashnodeAPI {
       }
 
       const responseData = (await response.data) as UpdatePostSuccessResponse
+      log(`responseData: ${JSON.stringify(responseData)}`)
       responseData.data.updatePost.post.path = post.path
       responseData.data.updatePost.post.hash = post.hash
 
@@ -91,6 +93,8 @@ export class HashnodeAPI {
       }
 
       const responseData = (await response.data) as UploadPostSuccessResponse
+      log(`responseData: ${JSON.stringify(responseData)}`)
+
       responseData.data.publishPost.post.hash = post.hash
       responseData.data.publishPost.post.path = post.path
       return responseData
