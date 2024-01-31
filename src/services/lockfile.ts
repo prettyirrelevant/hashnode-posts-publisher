@@ -1,6 +1,7 @@
 import axios, { isAxiosError } from 'axios'
 
 import { PostSuccessResponse } from '../schema'
+import { log } from '../utils'
 
 interface UpdateLockfileResponse {
   data: string
@@ -43,6 +44,7 @@ export class LockfileAPI {
     successfulUploads: PostSuccessResponse[]
     currentLockfile?: Lockfile
   }): Promise<UpdateLockfileResponse> {
+    log(`successfulUploads: ${JSON.stringify(successfulUploads)}\ncurrentLockfile: ${JSON.stringify(currentLockfile)}`)
     // should only happen the first time you run the action in a repository.
     if (!currentLockfile) {
       currentLockfile = {

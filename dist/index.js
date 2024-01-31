@@ -64051,7 +64051,6 @@ async function run() {
             }
         }
         // TODO: handle audio files.
-        (0, utils_1.log)('Got here.');
         const results = await Promise.allSettled(posts.map(async (post) => {
             const existingContent = lockfile.data?.content.find((content) => content.path === post.path && content.hash !== post.hash);
             if (existingContent) {
@@ -64061,9 +64060,7 @@ async function run() {
                 await hashnodeApiClient.uploadPost(post);
             }
         }));
-        (0, utils_1.log)('Got here too.');
         const successfulResults = results.filter((result) => result.status === 'fulfilled');
-        (0, utils_1.log)('Got here also.');
         await lockfileApiClient.updateLockfile({
             successfulUploads: successfulResults.map((result) => result.value),
             currentLockfile: lockfile?.data
@@ -64298,6 +64295,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LockfileAPI = void 0;
 const axios_1 = __importStar(__nccwpck_require__(8757));
+const utils_1 = __nccwpck_require__(1314);
 class LockfileAPI {
     baseUrl = 'https://salty-inlet-70255-aa12f0db37c0.herokuapp.com';
     client;
@@ -64307,6 +64305,7 @@ class LockfileAPI {
         this.client = axios_1.default.create({ baseURL: this.baseUrl, timeout: 5000 });
     }
     async updateLockfile({ successfulUploads, currentLockfile }) {
+        (0, utils_1.log)(`successfulUploads: ${JSON.stringify(successfulUploads)}\ncurrentLockfile: ${JSON.stringify(currentLockfile)}`);
         // should only happen the first time you run the action in a repository.
         if (!currentLockfile) {
             currentLockfile = {
