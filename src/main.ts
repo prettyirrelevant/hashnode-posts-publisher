@@ -38,87 +38,87 @@ export async function run(): Promise<void> {
     const lockfileApiClient = new LockfileAPI(process.env.GITHUB_REPOSITORY_ID as string)
 
     const lockfile = await lockfileApiClient.retrieveLockfile()
-    // const globber = await glob.create(patterns.join('\n'))
-    // for await (const file of globber.globGenerator()) {
-    //   log(`Processing file: ${file}`)
+    const globber = await glob.create(patterns.join('\n'))
+    for await (const file of globber.globGenerator()) {
+      log(`Processing file: ${file}`)
 
-    //   if (file.endsWith('.html')) {
-    //     const htmlContent = fs.readFileSync(file, { encoding: 'utf8' })
-    //     const markdownContent = turndownService.turndown(htmlContent)
-    //     const title = extractTitleFromHtml(htmlContent) || path.parse(file).name
-    //     const tags = extractKeywordsFromHtml(htmlContent) || ['hashnode']
-    //     const hash = computeContentHash(htmlContent)
+      if (file.endsWith('.html')) {
+        const htmlContent = fs.readFileSync(file, { encoding: 'utf8' })
+        const markdownContent = turndownService.turndown(htmlContent)
+        const title = extractTitleFromHtml(htmlContent) || path.parse(file).name
+        const tags = extractKeywordsFromHtml(htmlContent) || ['hashnode']
+        const hash = computeContentHash(htmlContent)
 
-    //     if (lockfile.data?.content.find((content) => content.path === file && content.hash === hash)) {
-    //       log(`Skipping ${file} because it has not changed.`)
-    //       continue
-    //     }
+        if (lockfile.data?.content.find((content) => content.path === file && content.hash === hash)) {
+          log(`Skipping ${file} because it has not changed.`)
+          continue
+        }
 
-    //     posts.push(
-    //       PostSchema.parse({
-    //         attributes: {
-    //           description: extractDescriptionFromHtml(htmlContent),
-    //           draft: true,
-    //           title,
-    //           tags
-    //         },
-    //         content: markdownContent,
-    //         slug: slugifyText(title),
-    //         path: file,
-    //         hash
-    //       })
-    //     )
-    //   } else if (file.endsWith('.md')) {
-    //     const markdownContent = fs.readFileSync(file, { encoding: 'utf8' })
-    //     const formattedMarkdown = fm<PostAttributes>(markdownContent)
-    //     const hash = computeContentHash(markdownContent)
-    //     if (formattedMarkdown.attributes.draft) {
-    //       continue
-    //     }
+        posts.push(
+          PostSchema.parse({
+            attributes: {
+              description: extractDescriptionFromHtml(htmlContent),
+              draft: true,
+              title,
+              tags
+            },
+            content: markdownContent,
+            slug: slugifyText(title),
+            path: file,
+            hash
+          })
+        )
+      } else if (file.endsWith('.md')) {
+        const markdownContent = fs.readFileSync(file, { encoding: 'utf8' })
+        const formattedMarkdown = fm<PostAttributes>(markdownContent)
+        const hash = computeContentHash(markdownContent)
+        if (formattedMarkdown.attributes.draft) {
+          continue
+        }
 
-    //     if (lockfile.data?.content.find((content) => content.path === file && content.hash === hash)) {
-    //       log(`Skipping ${file} because it has not changed.`)
-    //       continue
-    //     }
+        if (lockfile.data?.content.find((content) => content.path === file && content.hash === hash)) {
+          log(`Skipping ${file} because it has not changed.`)
+          continue
+        }
 
-    //     posts.push(
-    //       PostSchema.parse({
-    //         slug: slugifyText(formattedMarkdown.attributes.title),
-    //         attributes: formattedMarkdown.attributes,
-    //         content: formattedMarkdown.body,
-    //         path: file,
-    //         hash
-    //       })
-    //     )
-    //   }
-    // }
+        posts.push(
+          PostSchema.parse({
+            slug: slugifyText(formattedMarkdown.attributes.title),
+            attributes: formattedMarkdown.attributes,
+            content: formattedMarkdown.body,
+            path: file,
+            hash
+          })
+        )
+      }
+    }
 
-    // // TODO: handle audio files.
+    // TODO: handle audio files.
 
-    // // this can be made more efficient but it's fine for now -- i guess.
-    // const results = await Promise.allSettled(
-    //   posts.map(async (post) =>
-    //     lockfile.data?.content.find((content) => content.path === post.path && content.hash !== post.hash)
-    //       ? hashnodeApiClient.updatePost(
-    //           post,
-    //           lockfile.data?.content.find((content) => content.path === post.path && content.hash !== post.hash)
-    //             ?.id as string
-    //         )
-    //       : hashnodeApiClient.uploadPost(post)
-    //   )
-    // )
+    // this can be made more efficient but it's fine for now -- i guess.
+    const results = await Promise.allSettled(
+      posts.map(async (post) =>
+        lockfile.data?.content.find((content) => content.path === post.path && content.hash !== post.hash)
+          ? hashnodeApiClient.updatePost(
+              post,
+              lockfile.data?.content.find((content) => content.path === post.path && content.hash !== post.hash)
+                ?.id as string
+            )
+          : hashnodeApiClient.uploadPost(post)
+      )
+    )
 
-    // const successfulResults = results.filter(
-    //   (result) => result.status === 'fulfilled'
-    // ) as PromiseFulfilledResult<UploadPostSuccessResponse>[]
+    const successfulResults = results.filter(
+      (result) => result.status === 'fulfilled'
+    ) as PromiseFulfilledResult<UploadPostSuccessResponse>[]
 
-    // await lockfileApiClient.updateLockfile(
-    //   posts,
-    //   successfulResults.map((result) => result.value),
-    //   lockfile?.data
-    // )
+    await lockfileApiClient.updateLockfile(
+      posts,
+      successfulResults.map((result) => result.value),
+      lockfile?.data
+    )
 
-    // log('Action completed successfully.')
+    log('Action completed successfully.')
   } catch (error) {
     if (error instanceof Error) {
       core.setFailed(error.message)
