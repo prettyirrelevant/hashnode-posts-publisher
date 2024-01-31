@@ -64054,13 +64054,15 @@ async function run() {
         const results = await Promise.allSettled(posts.map(async (post) => {
             const existingContent = lockfile.data?.content.find((content) => content.path === post.path && content.hash !== post.hash);
             if (existingContent) {
-                await hashnodeApiClient.updatePost(post, existingContent.id);
+                return await hashnodeApiClient.updatePost(post, existingContent.id);
             }
             else {
-                await hashnodeApiClient.uploadPost(post);
+                return await hashnodeApiClient.uploadPost(post);
             }
         }));
+        (0, utils_1.log)(`results: ${JSON.stringify(results)}`);
         const successfulResults = results.filter((result) => result.status === 'fulfilled');
+        (0, utils_1.log)(`successfulResults: ${JSON.stringify(successfulResults)}`);
         await lockfileApiClient.updateLockfile({
             successfulUploads: successfulResults.map((result) => result.value),
             currentLockfile: lockfile?.data
