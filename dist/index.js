@@ -64051,6 +64051,7 @@ async function run() {
             }
         }
         // TODO: handle audio files.
+        (0, utils_1.log)('Got here.');
         const results = await Promise.allSettled(posts.map(async (post) => {
             const existingContent = lockfile.data?.content.find((content) => content.path === post.path && content.hash !== post.hash);
             if (existingContent) {
@@ -64060,7 +64061,9 @@ async function run() {
                 await hashnodeApiClient.uploadPost(post);
             }
         }));
+        (0, utils_1.log)('Got here too.');
         const successfulResults = results.filter((result) => result.status === 'fulfilled');
+        (0, utils_1.log)('Got here also.');
         await lockfileApiClient.updateLockfile({
             successfulUploads: successfulResults.map((result) => result.value),
             currentLockfile: lockfile?.data

@@ -95,7 +95,7 @@ export async function run(): Promise<void> {
     }
 
     // TODO: handle audio files.
-
+    log('Got here.')
     const results: PromiseSettledResult<unknown>[] = await Promise.allSettled(
       posts.map(async (post) => {
         const existingContent = lockfile.data?.content.find(
@@ -109,10 +109,12 @@ export async function run(): Promise<void> {
       })
     )
 
+    log('Got here too.')
     const successfulResults = results.filter(
       (result) => result.status === 'fulfilled'
     ) as PromiseFulfilledResult<PostSuccessResponse>[]
 
+    log('Got here also.')
     await lockfileApiClient.updateLockfile({
       successfulUploads: successfulResults.map((result) => result.value),
       currentLockfile: lockfile?.data
