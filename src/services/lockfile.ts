@@ -1,6 +1,6 @@
 import axios, { isAxiosError } from 'axios'
 
-import { UploadPostSuccessResponse, Post } from '../schema'
+import { PostSuccessResponse } from '../schema'
 
 interface UpdateLockfileResponse {
   data: string
@@ -36,11 +36,13 @@ export class LockfileAPI {
     this.client = axios.create({ baseURL: this.baseUrl, timeout: 5000 })
   }
 
-  async updateLockfile(
-    allPosts: Post[],
-    successfulUploads: UploadPostSuccessResponse[],
+  async updateLockfile({
+    successfulUploads,
+    currentLockfile
+  }: {
+    successfulUploads: PostSuccessResponse[]
     currentLockfile?: Lockfile
-  ): Promise<UpdateLockfileResponse> {
+  }): Promise<UpdateLockfileResponse> {
     // should only happen the first time you run the action in a repository.
     if (!currentLockfile) {
       currentLockfile = {
@@ -53,25 +55,56 @@ export class LockfileAPI {
       }
     }
 
-    const succesfullyUploadedPosts = allPosts.filter((post) =>
-      successfulUploads.find((upload) => upload.data.publishPost.post.slug === post.slug)
-    )
+    // now we need to update the lockfile with the new posts.
+    // case 1: lockfile is empty i.e. no posts have been uploaded yet.
+    if (currentLockfile.content.length === 0) {
+      currentLockfile.content = successfulUploads.map((entry) => {
+        const postData = 'publishPost' in entry.data ? entry.data.publishPost : entry.data.updatePost
+        return {
+          id: postData.post.id,
+          path: postData.post.path,
+          hash: postData.post.hash,
+          url: postData.post.url
+        }
+      })
+    } else {
+      // case 2: lockfile not empty i.e. posts have been uploaded before.
+      // we need to be able to update existing posts and add new ones
 
-    currentLockfile.content = currentLockfile.content.map((content) => {
-      const post = succesfullyUploadedPosts.find((entry) => entry.path === content.path)
-      if (!post) {
-        return content
-      }
+      // if the post exists in the lockfile, update it.
+      currentLockfile.content = currentLockfile.content.map((entry) => {
+        const uploadData = successfulUploads.find((upload) => {
+          const i = 'publishPost' in upload.data ? upload.data.publishPost : upload.data.updatePost
+          return i.post.path === i.post.path
+        })
 
-      const upload = successfulUploads.find((entry) => entry.data.publishPost.post.slug === post.slug)
+        if (uploadData) {
+          const postData = 'publishPost' in uploadData.data ? uploadData.data.publishPost : uploadData.data.updatePost
+          return {
+            id: postData.post.id,
+            path: postData.post.path,
+            hash: postData.post.hash,
+            url: postData.post.url
+          }
+        }
 
-      return {
-        ...content,
-        id: upload?.data.publishPost.post.id as string,
-        url: upload?.data.publishPost.post.url as string,
-        hash: post.hash
-      }
-    })
+        return entry
+      })
+
+      // else, add new entries to the lockfile.
+      currentLockfile.content = [
+        ...currentLockfile.content,
+        ...successfulUploads.map((entry) => {
+          const postData = 'publishPost' in entry.data ? entry.data.publishPost : entry.data.updatePost
+          return {
+            id: postData.post.id,
+            path: postData.post.path,
+            hash: postData.post.hash,
+            url: postData.post.url
+          }
+        })
+      ]
+    }
 
     const payload = {
       repositoryName: process.env.GITHUB_REPOSITORY as string,

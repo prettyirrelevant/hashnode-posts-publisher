@@ -14,7 +14,7 @@ import {
   slugifyText,
   log
 } from './utils'
-import { UploadPostSuccessResponse, PostAttributes, PostSchema, Post } from './schema'
+import { PostSuccessResponse, PostAttributes, PostSchema, Post } from './schema'
 import { HashnodeAPI, LockfileAPI } from './services'
 
 /**
@@ -40,7 +40,7 @@ export async function run(): Promise<void> {
     const lockfile = await lockfileApiClient.retrieveLockfile()
     const globber = await glob.create(patterns.join('\n'))
     for await (const file of globber.globGenerator()) {
-      log(`Processing file: ${file}`)
+      log(`Processing file ${file}`)
 
       if (file.endsWith('.html')) {
         const htmlContent = fs.readFileSync(file, { encoding: 'utf8' })
@@ -73,6 +73,7 @@ export async function run(): Promise<void> {
         const formattedMarkdown = fm<PostAttributes>(markdownContent)
         const hash = computeContentHash(markdownContent)
         if (formattedMarkdown.attributes.draft) {
+          log(`Skipping ${file} because it is a draft.`)
           continue
         }
 
@@ -95,28 +96,27 @@ export async function run(): Promise<void> {
 
     // TODO: handle audio files.
 
-    // this can be made more efficient but it's fine for now -- i guess.
-    const results = await Promise.allSettled(
-      posts.map(async (post) =>
-        lockfile.data?.content.find((content) => content.path === post.path && content.hash !== post.hash)
-          ? hashnodeApiClient.updatePost(
-              post,
-              lockfile.data?.content.find((content) => content.path === post.path && content.hash !== post.hash)
-                ?.id as string
-            )
-          : hashnodeApiClient.uploadPost(post)
-      )
+    const results: PromiseSettledResult<unknown>[] = await Promise.allSettled(
+      posts.map(async (post) => {
+        const existingContent = lockfile.data?.content.find(
+          (content) => content.path === post.path && content.hash !== post.hash
+        )
+        if (existingContent) {
+          await hashnodeApiClient.updatePost(post, existingContent.id)
+        } else {
+          await hashnodeApiClient.uploadPost(post)
+        }
+      })
     )
 
     const successfulResults = results.filter(
       (result) => result.status === 'fulfilled'
-    ) as PromiseFulfilledResult<UploadPostSuccessResponse>[]
+    ) as PromiseFulfilledResult<PostSuccessResponse>[]
 
-    await lockfileApiClient.updateLockfile(
-      posts,
-      successfulResults.map((result) => result.value),
-      lockfile?.data
-    )
+    await lockfileApiClient.updateLockfile({
+      successfulUploads: successfulResults.map((result) => result.value),
+      currentLockfile: lockfile?.data
+    })
 
     log('Action completed successfully.')
   } catch (error) {

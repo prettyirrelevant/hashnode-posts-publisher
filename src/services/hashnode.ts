@@ -1,6 +1,6 @@
 import axios, { isAxiosError } from 'axios'
 
-import { UploadPostSuccessResponse, Post } from '../schema'
+import { UploadPostSuccessResponse, UpdatePostSuccessResponse, Post } from '../schema'
 
 export class HashnodeAPI {
   private baseUrl = 'https://gql.hashnode.com'
@@ -17,7 +17,7 @@ export class HashnodeAPI {
     this.publicationId = publicationId
   }
 
-  async updatePost(post: Post, postId: string): Promise<void> {
+  async updatePost(post: Post, postId: string): Promise<UpdatePostSuccessResponse> {
     const query = `
     mutation UpdatePost($input: UpdatePostInput!) {
         updatePost(input: $input) {
@@ -47,7 +47,11 @@ export class HashnodeAPI {
         return Promise.reject(new Error(JSON.stringify(response.data.errors)))
       }
 
-      return response.data
+      const responseData = response.data as UpdatePostSuccessResponse
+      responseData.data.updatePost.post.path = post.path
+      responseData.data.updatePost.post.hash = post.hash
+
+      return responseData
     } catch (error: unknown) {
       if (isAxiosError(error)) {
         return Promise.reject(new Error(JSON.stringify(error.response?.data)))
@@ -86,7 +90,10 @@ export class HashnodeAPI {
         return Promise.reject(new Error(JSON.stringify(response.data.errors)))
       }
 
-      return response.data
+      const responseData = response.data as UploadPostSuccessResponse
+      responseData.data.publishPost.post.hash = post.hash
+      responseData.data.publishPost.post.path = post.path
+      return responseData
     } catch (error: unknown) {
       if (isAxiosError(error)) {
         return Promise.reject(new Error(JSON.stringify(error.response?.data)))

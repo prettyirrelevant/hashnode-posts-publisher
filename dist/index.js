@@ -64005,7 +64005,7 @@ async function run() {
         const lockfile = await lockfileApiClient.retrieveLockfile();
         const globber = await glob.create(patterns.join('\n'));
         for await (const file of globber.globGenerator()) {
-            (0, utils_1.log)(`Processing file: ${file}`);
+            (0, utils_1.log)(`Processing file ${file}`);
             if (file.endsWith('.html')) {
                 const htmlContent = fs.readFileSync(file, { encoding: 'utf8' });
                 const markdownContent = turndownService.turndown(htmlContent);
@@ -64034,6 +64034,7 @@ async function run() {
                 const formattedMarkdown = (0, front_matter_1.default)(markdownContent);
                 const hash = (0, utils_1.computeContentHash)(markdownContent);
                 if (formattedMarkdown.attributes.draft) {
+                    (0, utils_1.log)(`Skipping ${file} because it is a draft.`);
                     continue;
                 }
                 if (lockfile.data?.content.find((content) => content.path === file && content.hash === hash)) {
@@ -64050,13 +64051,20 @@ async function run() {
             }
         }
         // TODO: handle audio files.
-        // this can be made more efficient but it's fine for now -- i guess.
-        const results = await Promise.allSettled(posts.map(async (post) => lockfile.data?.content.find((content) => content.path === post.path && content.hash !== post.hash)
-            ? hashnodeApiClient.updatePost(post, lockfile.data?.content.find((content) => content.path === post.path && content.hash !== post.hash)
-                ?.id)
-            : hashnodeApiClient.uploadPost(post)));
+        const results = await Promise.allSettled(posts.map(async (post) => {
+            const existingContent = lockfile.data?.content.find((content) => content.path === post.path && content.hash !== post.hash);
+            if (existingContent) {
+                await hashnodeApiClient.updatePost(post, existingContent.id);
+            }
+            else {
+                await hashnodeApiClient.uploadPost(post);
+            }
+        }));
         const successfulResults = results.filter((result) => result.status === 'fulfilled');
-        await lockfileApiClient.updateLockfile(posts, successfulResults.map((result) => result.value), lockfile?.data);
+        await lockfileApiClient.updateLockfile({
+            successfulUploads: successfulResults.map((result) => result.value),
+            currentLockfile: lockfile?.data
+        });
         (0, utils_1.log)('Action completed successfully.');
     }
     catch (error) {
@@ -64184,7 +64192,10 @@ class HashnodeAPI {
             if (response.data.errors) {
                 return Promise.reject(new Error(JSON.stringify(response.data.errors)));
             }
-            return response.data;
+            const responseData = response.data;
+            responseData.data.updatePost.post.path = post.path;
+            responseData.data.updatePost.post.hash = post.hash;
+            return responseData;
         }
         catch (error) {
             if ((0, axios_1.isAxiosError)(error)) {
@@ -64220,7 +64231,10 @@ class HashnodeAPI {
             if (response.data.errors) {
                 return Promise.reject(new Error(JSON.stringify(response.data.errors)));
             }
-            return response.data;
+            const responseData = response.data;
+            responseData.data.publishPost.post.hash = post.hash;
+            responseData.data.publishPost.post.path = post.path;
+            return responseData;
         }
         catch (error) {
             if ((0, axios_1.isAxiosError)(error)) {
@@ -64289,7 +64303,7 @@ class LockfileAPI {
         this.repositoryId = repositoryId;
         this.client = axios_1.default.create({ baseURL: this.baseUrl, timeout: 5000 });
     }
-    async updateLockfile(allPosts, successfulUploads, currentLockfile) {
+    async updateLockfile({ successfulUploads, currentLockfile }) {
         // should only happen the first time you run the action in a repository.
         if (!currentLockfile) {
             currentLockfile = {
@@ -64301,20 +64315,53 @@ class LockfileAPI {
                 content: []
             };
         }
-        const succesfullyUploadedPosts = allPosts.filter((post) => successfulUploads.find((upload) => upload.data.publishPost.post.slug === post.slug));
-        currentLockfile.content = currentLockfile.content.map((content) => {
-            const post = succesfullyUploadedPosts.find((entry) => entry.path === content.path);
-            if (!post) {
-                return content;
-            }
-            const upload = successfulUploads.find((entry) => entry.data.publishPost.post.slug === post.slug);
-            return {
-                ...content,
-                id: upload?.data.publishPost.post.id,
-                url: upload?.data.publishPost.post.url,
-                hash: post.hash
-            };
-        });
+        // now we need to update the lockfile with the new posts.
+        // case 1: lockfile is empty i.e. no posts have been uploaded yet.
+        if (currentLockfile.content.length === 0) {
+            currentLockfile.content = successfulUploads.map((entry) => {
+                const postData = 'publishPost' in entry.data ? entry.data.publishPost : entry.data.updatePost;
+                return {
+                    id: postData.post.id,
+                    path: postData.post.path,
+                    hash: postData.post.hash,
+                    url: postData.post.url
+                };
+            });
+        }
+        else {
+            // case 2: lockfile not empty i.e. posts have been uploaded before.
+            // we need to be able to update existing posts and add new ones
+            // if the post exists in the lockfile, update it.
+            currentLockfile.content = currentLockfile.content.map((entry) => {
+                const uploadData = successfulUploads.find((upload) => {
+                    const i = 'publishPost' in upload.data ? upload.data.publishPost : upload.data.updatePost;
+                    return i.post.path === i.post.path;
+                });
+                if (uploadData) {
+                    const postData = 'publishPost' in uploadData.data ? uploadData.data.publishPost : uploadData.data.updatePost;
+                    return {
+                        id: postData.post.id,
+                        path: postData.post.path,
+                        hash: postData.post.hash,
+                        url: postData.post.url
+                    };
+                }
+                return entry;
+            });
+            // else, add new entries to the lockfile.
+            currentLockfile.content = [
+                ...currentLockfile.content,
+                ...successfulUploads.map((entry) => {
+                    const postData = 'publishPost' in entry.data ? entry.data.publishPost : entry.data.updatePost;
+                    return {
+                        id: postData.post.id,
+                        path: postData.post.path,
+                        hash: postData.post.hash,
+                        url: postData.post.url
+                    };
+                })
+            ];
+        }
         const payload = {
             repositoryName: process.env.GITHUB_REPOSITORY,
             posts: currentLockfile.content
@@ -64475,7 +64522,7 @@ function initTurndownService() {
 exports.initTurndownService = initTurndownService;
 // Utility function to log messages
 function log(message) {
-    core.info(message);
+    core.info(`[info]: ${message}`);
 }
 exports.log = log;
 

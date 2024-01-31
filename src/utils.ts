@@ -102,5 +102,5 @@ export function initTurndownService(): TurndownService {
 
 // Utility function to log messages
 export function log(message: string): void {
-  core.info(message)
+  core.info(`[info]: ${message}`)
 }

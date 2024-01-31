@@ -38,6 +38,8 @@ export type UploadPostSuccessResponse = {
   data: {
     publishPost: {
       post: {
+        path: string // this is not part of the response from the API.
+        hash: string // this is not part of the response from the API.
         slug: string
         url: string
         id: string
@@ -45,3 +47,19 @@ export type UploadPostSuccessResponse = {
     }
   }
 }
+
+export type UpdatePostSuccessResponse = {
+  data: {
+    updatePost: {
+      post: {
+        path: string // this is not part of the response from the API.
+        hash: string // this is not part of the response from the API.
+        slug: string
+        url: string
+        id: string
+      }
+    }
+  }
+}
+
+export type PostSuccessResponse = UploadPostSuccessResponse | UpdatePostSuccessResponse
