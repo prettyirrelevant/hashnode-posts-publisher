@@ -41,8 +41,16 @@ export class LockfileAPI {
     successfulUploads: UploadPostSuccessResponse[],
     currentLockfile?: Lockfile
   ): Promise<UpdateLockfileResponse> {
+    // should only happen the first time you run the action in a repository.
     if (!currentLockfile) {
-      return Promise.reject(new Error('Lockfile not found.'))
+      currentLockfile = {
+        id: '',
+        repositoryName: process.env.GITHUB_REPOSITORY as string,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        repositoryId: this.repositoryId,
+        content: []
+      }
     }
 
     const succesfullyUploadedPosts = allPosts.filter((post) =>
