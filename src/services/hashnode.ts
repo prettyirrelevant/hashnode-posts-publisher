@@ -47,7 +47,7 @@ export class HashnodeAPI {
         return Promise.reject(new Error(JSON.stringify(response.data.errors)))
       }
 
-      const responseData = response.data as UpdatePostSuccessResponse
+      const responseData = (await response.data) as UpdatePostSuccessResponse
       responseData.data.updatePost.post.path = post.path
       responseData.data.updatePost.post.hash = post.hash
 
@@ -90,7 +90,7 @@ export class HashnodeAPI {
         return Promise.reject(new Error(JSON.stringify(response.data.errors)))
       }
 
-      const responseData = response.data as UploadPostSuccessResponse
+      const responseData = (await response.data) as UploadPostSuccessResponse
       responseData.data.publishPost.post.hash = post.hash
       responseData.data.publishPost.post.path = post.path
       return responseData

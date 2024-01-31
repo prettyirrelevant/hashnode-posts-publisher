@@ -64192,7 +64192,7 @@ class HashnodeAPI {
             if (response.data.errors) {
                 return Promise.reject(new Error(JSON.stringify(response.data.errors)));
             }
-            const responseData = response.data;
+            const responseData = (await response.data);
             responseData.data.updatePost.post.path = post.path;
             responseData.data.updatePost.post.hash = post.hash;
             return responseData;
@@ -64231,7 +64231,7 @@ class HashnodeAPI {
             if (response.data.errors) {
                 return Promise.reject(new Error(JSON.stringify(response.data.errors)));
             }
-            const responseData = response.data;
+            const responseData = (await response.data);
             responseData.data.publishPost.post.hash = post.hash;
             responseData.data.publishPost.post.path = post.path;
             return responseData;
