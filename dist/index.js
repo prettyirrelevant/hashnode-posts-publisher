@@ -64319,8 +64319,15 @@ class LockfileAPI {
             repositoryName: process.env.GITHUB_REPOSITORY,
             posts: currentLockfile.content
         };
-        const response = await this.client.put(`/lockfiles/${this.repositoryId}`, payload);
-        return response.data;
+        try {
+            const response = await this.client.put(`/lockfiles/${this.repositoryId}`, payload);
+            return response.data;
+        }
+        catch (error) {
+            return (0, axios_1.isAxiosError)(error)
+                ? Promise.reject(new Error(JSON.stringify(error.response?.data)))
+                : Promise.reject(error);
+        }
     }
     async retrieveLockfile() {
         try {

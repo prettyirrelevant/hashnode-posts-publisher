@@ -77,8 +77,15 @@ export class LockfileAPI {
       repositoryName: process.env.GITHUB_REPOSITORY as string,
       posts: currentLockfile.content
     }
-    const response = await this.client.put<UpdateLockfileResponse>(`/lockfiles/${this.repositoryId}`, payload)
-    return response.data
+
+    try {
+      const response = await this.client.put<UpdateLockfileResponse>(`/lockfiles/${this.repositoryId}`, payload)
+      return response.data
+    } catch (error: unknown) {
+      return isAxiosError(error)
+        ? Promise.reject(new Error(JSON.stringify(error.response?.data)))
+        : Promise.reject(error)
+    }
   }
 
   async retrieveLockfile(): Promise<RetrieveLockfileResponse> {
