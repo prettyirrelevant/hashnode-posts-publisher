@@ -64151,7 +64151,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HashnodeAPI = void 0;
 const axios_1 = __importStar(__nccwpck_require__(8757));
-const utils_1 = __nccwpck_require__(1314);
 class HashnodeAPI {
     baseUrl = 'https://gql.hashnode.com';
     client;
@@ -64193,8 +64192,7 @@ class HashnodeAPI {
             if (response.data.errors) {
                 return Promise.reject(new Error(JSON.stringify(response.data.errors)));
             }
-            const responseData = (await response.data);
-            (0, utils_1.log)(`responseData: ${JSON.stringify(responseData)}`);
+            const responseData = await response.data;
             responseData.data.updatePost.post.path = post.path;
             responseData.data.updatePost.post.hash = post.hash;
             return responseData;
@@ -64233,8 +64231,7 @@ class HashnodeAPI {
             if (response.data.errors) {
                 return Promise.reject(new Error(JSON.stringify(response.data.errors)));
             }
-            const responseData = (await response.data);
-            (0, utils_1.log)(`responseData: ${JSON.stringify(responseData)}`);
+            const responseData = await response.data;
             responseData.data.publishPost.post.hash = post.hash;
             responseData.data.publishPost.post.path = post.path;
             return responseData;
