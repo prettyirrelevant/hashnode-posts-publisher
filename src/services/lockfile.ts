@@ -78,14 +78,9 @@ export class LockfileAPI {
       const response = await this.client.get<RetrieveLockfileResponse>(`/lockfiles/${this.repositoryId}`)
       return response.data
     } catch (error: unknown) {
-      if (isAxiosError(error)) {
-        if (error.response?.status === 404) {
-          return { data: undefined }
-        }
-        return Promise.reject(new Error(JSON.stringify(error.response?.data)))
-      }
-
-      return Promise.reject(error)
+      return isAxiosError(error)
+        ? Promise.reject(new Error(JSON.stringify(error.response?.data)))
+        : Promise.reject(error)
     }
   }
 }
