@@ -1,1 +1,1 @@
-# Hashnode Posts Action
+# Hashnode Blog Action

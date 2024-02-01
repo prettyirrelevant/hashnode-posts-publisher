@@ -42,7 +42,7 @@ export async function run(): Promise<void> {
     for await (const file of globber.globGenerator()) {
       log(`Processing file ${file}`)
 
-      if (file.endsWith('.html')) {
+      if (file.endsWith('.html') && inputs.supportedFormats.includes('html')) {
         const htmlContent = fs.readFileSync(file, { encoding: 'utf8' })
         const markdownContent = turndownService.turndown(htmlContent)
         const title = extractTitleFromHtml(htmlContent) || path.parse(file).name
@@ -68,7 +68,7 @@ export async function run(): Promise<void> {
             hash
           })
         )
-      } else if (file.endsWith('.md')) {
+      } else if (file.endsWith('.md') && inputs.supportedFormats.includes('md')) {
         const markdownContent = fs.readFileSync(file, { encoding: 'utf8' })
         const formattedMarkdown = fm<PostAttributes>(markdownContent)
         const hash = computeContentHash(markdownContent)
@@ -108,12 +108,10 @@ export async function run(): Promise<void> {
         }
       })
     )
-    log(`results: ${JSON.stringify(results)}`)
 
     const successfulResults = results.filter(
       (result) => result.status === 'fulfilled'
     ) as PromiseFulfilledResult<PostSuccessResponse>[]
-    log(`successfulResults: ${JSON.stringify(successfulResults)}`)
 
     await lockfileApiClient.updateLockfile({
       successfulUploads: successfulResults.map((result) => result.value),

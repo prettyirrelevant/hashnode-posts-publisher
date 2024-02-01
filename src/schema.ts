@@ -1,14 +1,15 @@
-import slugify from 'slugify'
 import { z } from 'zod'
 
-const SupportedFormatsSchema = z.enum(['md', 'html', 'audio'])
+import { slugifyText } from './utils'
+
+const SupportedFormatsSchema = z.enum(['md', 'html', 'mp3', 'wav'])
 
 export const ActionInputsSchema = z.object({
   supportedFormats: z.string().transform((value) => {
     const formats = value.split(',').map((format) => format.trim())
     return formats.map((format) => SupportedFormatsSchema.parse(format))
   }),
-  openaiApiKey: z.string().nullish(),
+  replicateApiKey: z.string().nullish(),
   postsDirectory: z.string(),
   publicationId: z.string(),
   accessToken: z.string()
@@ -16,7 +17,7 @@ export const ActionInputsSchema = z.object({
 export type ActionInputs = z.infer<typeof ActionInputsSchema>
 
 const PostAttributesSchema = z.object({
-  tags: z.array(z.string()).transform((tags) => tags?.map((tag) => ({ slug: slugify(tag), name: tag }))),
+  tags: z.array(z.string()).transform((tags) => tags?.map((tag) => ({ slug: slugifyText(tag), name: tag }))),
   coverImageUrl: z.string().nullish(),
   description: z.string().nullish(),
   draft: z.boolean().default(false),

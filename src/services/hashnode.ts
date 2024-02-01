@@ -4,8 +4,8 @@ import { UploadPostSuccessResponse, UpdatePostSuccessResponse, Post } from '../s
 
 export class HashnodeAPI {
   private baseUrl = 'https://gql.hashnode.com'
-  private client: axios.AxiosInstance
   private publicationId: string
+  client: axios.AxiosInstance
 
   constructor(accessToken: string, publicationId: string) {
     this.client = axios.create({

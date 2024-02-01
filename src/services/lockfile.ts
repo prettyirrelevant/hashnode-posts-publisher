@@ -1,7 +1,6 @@
 import axios, { isAxiosError } from 'axios'
 
 import { PostSuccessResponse } from '../schema'
-import { log } from '../utils'
 
 interface UpdateLockfileResponse {
   data: string
@@ -29,8 +28,8 @@ interface LockfileContent {
 
 export class LockfileAPI {
   private baseUrl = 'https://salty-inlet-70255-aa12f0db37c0.herokuapp.com'
-  private client: axios.AxiosInstance
   private repositoryId: string
+  client: axios.AxiosInstance
 
   constructor(repositoryId: string) {
     this.repositoryId = repositoryId
@@ -44,7 +43,6 @@ export class LockfileAPI {
     successfulUploads: PostSuccessResponse[]
     currentLockfile?: Lockfile
   }): Promise<UpdateLockfileResponse> {
-    log(`successfulUploads: ${JSON.stringify(successfulUploads)}\ncurrentLockfile: ${JSON.stringify(currentLockfile)}`)
     // should only happen the first time you run the action in a repository.
     if (!currentLockfile) {
       currentLockfile = {

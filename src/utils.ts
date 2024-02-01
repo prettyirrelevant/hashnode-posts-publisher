@@ -1,7 +1,7 @@
 import TurndownService from 'turndown'
 import * as core from '@actions/core'
 import * as crypto from 'node:crypto'
-import slugify from 'slugify'
+import Replicate from 'replicate'
 
 import { ActionInputsSchema, ActionInputs } from './schema'
 
@@ -57,16 +57,16 @@ export function extractKeywordsFromHtml(html: string): string[] | null {
  */
 export function getActionInputs(): ActionInputs {
   const accessToken: string = core.getInput('access-token')
-  const openaiApiKey: string = core.getInput('openai-api-key')
+  const replicateApiKey: string = core.getInput('replicate-api-key')
   const publicationId: string = core.getInput('publication-id')
   const rawSupportedFormats: string = core.getInput('supported-formats')
   const postsDirectory: string = core.toPlatformPath(core.getInput('posts-directory'))
 
   return ActionInputsSchema.parse({
     supportedFormats: rawSupportedFormats,
+    replicateApiKey,
     postsDirectory,
     publicationId,
-    openaiApiKey,
     accessToken
   })
 }
@@ -86,13 +86,30 @@ export function computeContentHash(content: string): string {
 
 /**
  * Converts a given text into a slug by removing special characters and converting to lowercase.
+ * This was ported from https://github.com/django/django/blob/f71bcc001bb3324020cfd756e84d4e9c6bb98cce/django/utils/text.py#L436
+ *
  * @param text - The text to be slugified.
  * @returns The slugified version of the text.
  */
 export function slugifyText(text: string): string {
-  return slugify(text, { strict: true, lower: true })
+  return (
+    text
+      // eslint-disable-next-line no-control-regex
+      .replace(/[^\u0000-\u007F]/, '')
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/[-\s]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+  )
 }
 
+/**
+ * Initializes a TurndownService instance.
+ * The TurndownService is used to convert HTML to Markdown.
+ * The 'title' element is removed from the HTML output.
+ *
+ * @returns {TurndownService} The initialized TurndownService instance.
+ */
 export function initTurndownService(): TurndownService {
   const turndownService = new TurndownService()
   turndownService.remove('title') // Remove title from HTML output.
@@ -100,7 +117,23 @@ export function initTurndownService(): TurndownService {
   return turndownService
 }
 
-// Utility function to log messages
+/**
+ * Logs a message to the console.
+ * @param message - The message to be logged.
+ */
 export function log(message: string): void {
   core.info(`[info]: ${message}`)
+}
+
+/**
+ * Initializes a Replicate instance with an optional API key.
+ * If no API key is provided, a default API key will be used.
+ *
+ * @param apiKey - Optional API key for authentication.
+ * @returns A new Replicate instance.
+ */
+export function initReplicateService(apiKey?: string): Replicate {
+  return new Replicate({
+    auth: apiKey || 'r8_P1YGRTYClMSWLarwf4NFk07y7rsQC2d2fYhDr'
+  })
 }

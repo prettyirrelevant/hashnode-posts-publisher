@@ -1,5 +1,5 @@
 author: 'Isaac Adewumi'
-name: 'hashnode-posts-publisher'
+name: 'hashnode-blog'
 description: 'Publish posts to Hashnode by pushing Markdown files to a GitHub repository.'
 
 # Branding appears on GitHub Marketplace
@@ -9,8 +9,8 @@ branding:
 
 # Define input parameters
 inputs:
-  openai-api-key:
-    description: 'The OpenAI API key for authentication.'
+  replicate-api-key:
+    description: 'The Replicate API key for authentication.'
     required: false
 
   access-token:
