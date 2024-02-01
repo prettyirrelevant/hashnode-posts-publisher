@@ -1,8 +1,8 @@
-# `@prettyirrelevant/hashnode-blog`
+# `@prettyirrelevant/hashnode-posts-publisher`
 
 Publish blog posts from your GitHub repository to Hashnode with this GitHub Action.
 
-![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/prettyirrelevant/hashnode-blog/ci.yml?style=for-the-badge) ![Libraries.io dependency status for GitHub repo](https://img.shields.io/librariesio/github/prettyirrelevant/hashnode-blog?style=for-the-badge) ![GitHub License](https://img.shields.io/github/license/prettyirrelevant/hashnode-blog?style=for-the-badge) ![GitHub Release](https://img.shields.io/github/v/release/prettyirrelevant/hashnode-blog?style=for-the-badge)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/prettyirrelevant/hashnode-posts-publisher/ci.yml?style=for-the-badge) ![Libraries.io dependency status for GitHub repo](https://img.shields.io/librariesio/github/prettyirrelevant/hashnode-posts-publisher?style=for-the-badge) ![GitHub License](https://img.shields.io/github/license/prettyirrelevant/hashnode-posts-publisher?style=for-the-badge) ![GitHub Release](https://img.shields.io/github/v/release/prettyirrelevant/hashnode-posts-publisher?style=for-the-badge)
 
 ## Usage
 
