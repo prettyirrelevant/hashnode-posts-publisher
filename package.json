@@ -13,9 +13,10 @@
     "url": "https://github.com/prettyirrelevant/hashnode-blog/issues"
   },
   "keywords": [
-    "actions",
     "node",
-    "setup"
+    "actions",
+    "graphql",
+    "hashnode"
   ],
   "exports": {
     ".": "./dist/index.js"
@@ -27,9 +28,9 @@
     "bundle": "npm run format:write && npm run package",
     "ci-test": "jest",
     "coverage": "make-coverage-badge --output-path ./badges/coverage.svg",
-    "format:write": "eslint . --fix -c ./.github/linters/.eslintrc.yml && prettier --write **/*.ts",
+    "format:write": "eslint . --fix -c .eslintrc.yml && prettier --write **/*.ts",
     "format:check": "prettier --check **/*.ts",
-    "lint": "npx eslint . -c ./.github/linters/.eslintrc.yml",
+    "lint": "npx eslint . -c .eslintrc.yml",
     "package": "ncc build src/index.ts --license licenses.txt",
     "package:watch": "npm run package -- --watch",
     "test": "jest",
