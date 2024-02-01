@@ -1,7 +1,7 @@
 ---
-title: Just hack'n
+title: Just hack'n a couple of projects.
 draft: false
-description: Nothing to see here
+description: Nothing to see here just me messing around.
 tags: ["hacking", "markdown"]
 ---
 
