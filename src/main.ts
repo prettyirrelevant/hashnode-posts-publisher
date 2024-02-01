@@ -48,6 +48,9 @@ export async function run(): Promise<void> {
         const title = extractTitleFromHtml(htmlContent) || path.parse(file).name
         const tags = extractKeywordsFromHtml(htmlContent) || ['hashnode']
         const hash = computeContentHash(htmlContent)
+        // we use the name of the file (with the extension) as the path to
+        // avoid post duplication when the repository name is changed.
+        const fileName = path.parse(file).name
 
         if (lockfile.data?.content.find((content) => content.path === file && content.hash === hash)) {
           log(`Skipping ${file} because it has not changed.`)
@@ -64,7 +67,7 @@ export async function run(): Promise<void> {
             },
             content: markdownContent,
             slug: slugifyText(title),
-            path: file,
+            path: fileName,
             hash
           })
         )
@@ -72,6 +75,10 @@ export async function run(): Promise<void> {
         const markdownContent = fs.readFileSync(file, { encoding: 'utf8' })
         const formattedMarkdown = fm<PostAttributes>(markdownContent)
         const hash = computeContentHash(markdownContent)
+        // we use the name of the file (with the extension) as the path to
+        // avoid post duplication when the repository name is changed.
+        const fileName = path.parse(file).name
+
         if (formattedMarkdown.attributes.draft) {
           log(`Skipping ${file} because it is a draft.`)
           continue
@@ -87,7 +94,7 @@ export async function run(): Promise<void> {
             slug: slugifyText(formattedMarkdown.attributes.title),
             attributes: formattedMarkdown.attributes,
             content: formattedMarkdown.body,
-            path: file,
+            path: fileName,
             hash
           })
         )

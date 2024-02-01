@@ -72943,6 +72943,9 @@ async function run() {
                 const title = (0, utils_1.extractTitleFromHtml)(htmlContent) || path.parse(file).name;
                 const tags = (0, utils_1.extractKeywordsFromHtml)(htmlContent) || ['hashnode'];
                 const hash = (0, utils_1.computeContentHash)(htmlContent);
+                // we use the name of the file (with the extension) as the path to
+                // avoid post duplication when the repository name is changed.
+                const fileName = path.parse(file).name;
                 if (lockfile.data?.content.find((content) => content.path === file && content.hash === hash)) {
                     (0, utils_1.log)(`Skipping ${file} because it has not changed.`);
                     continue;
@@ -72956,7 +72959,7 @@ async function run() {
                     },
                     content: markdownContent,
                     slug: (0, utils_1.slugifyText)(title),
-                    path: file,
+                    path: fileName,
                     hash
                 }));
             }
@@ -72964,6 +72967,9 @@ async function run() {
                 const markdownContent = fs.readFileSync(file, { encoding: 'utf8' });
                 const formattedMarkdown = (0, front_matter_1.default)(markdownContent);
                 const hash = (0, utils_1.computeContentHash)(markdownContent);
+                // we use the name of the file (with the extension) as the path to
+                // avoid post duplication when the repository name is changed.
+                const fileName = path.parse(file).name;
                 if (formattedMarkdown.attributes.draft) {
                     (0, utils_1.log)(`Skipping ${file} because it is a draft.`);
                     continue;
@@ -72976,7 +72982,7 @@ async function run() {
                     slug: (0, utils_1.slugifyText)(formattedMarkdown.attributes.title),
                     attributes: formattedMarkdown.attributes,
                     content: formattedMarkdown.body,
-                    path: file,
+                    path: fileName,
                     hash
                 }));
             }
