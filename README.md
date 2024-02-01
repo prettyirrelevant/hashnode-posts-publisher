@@ -13,8 +13,6 @@ name: Publish Blog Posts
 on:
   pull_request:
   push:
-    branches:
-      - main
 
 jobs:
   # ... other jobs e.g. validating markdown/html files.
@@ -36,6 +34,7 @@ jobs:
 
 ### Inputs
 
+- `supported-formats`: The file formats to publish, comma separated. Supported values are `md` for Markdown and `html`. Default is `md`.
 - `access-token`: Your Hashnode API access token, available in your [Hashnode account settings](https://hashnode.com/settings/developer).
 - `publication-id`: The unique ID of your Hashnode blog, available in the URL when viewing your blog's dashboard. The URL should look like `https://hashnode.com/<publication-id>/dashboard`.
 - `posts-directory`: The directory in your repository containing the blog posts.

@@ -25,7 +25,7 @@ inputs:
   supported-formats:
     description: 'The allowed file formats for blog posts.'
     required: false
-    default: 'md,html'
+    default: 'md'
 
   publication-id:
     description: 'The ID of the publication to publish the posts to.'
