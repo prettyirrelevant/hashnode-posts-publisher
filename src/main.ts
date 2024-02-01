@@ -50,9 +50,9 @@ export async function run(): Promise<void> {
         const hash = computeContentHash(htmlContent)
         // we use the name of the file (with the extension) as the path to
         // avoid post duplication when the repository name is changed.
-        const fileName = path.parse(file).name
+        const fileName = path.parse(file).base
 
-        if (lockfile.data?.content.find((content) => content.path === file && content.hash === hash)) {
+        if (lockfile.data?.content.find((content) => content.path === fileName && content.hash === hash)) {
           log(`Skipping ${file} because it has not changed.`)
           continue
         }
@@ -77,14 +77,14 @@ export async function run(): Promise<void> {
         const hash = computeContentHash(markdownContent)
         // we use the name of the file (with the extension) as the path to
         // avoid post duplication when the repository name is changed.
-        const fileName = path.parse(file).name
+        const fileName = path.parse(file).base
 
         if (formattedMarkdown.attributes.draft) {
           log(`Skipping ${file} because it is a draft.`)
           continue
         }
 
-        if (lockfile.data?.content.find((content) => content.path === file && content.hash === hash)) {
+        if (lockfile.data?.content.find((content) => content.path === fileName && content.hash === hash)) {
           log(`Skipping ${file} because it has not changed.`)
           continue
         }
