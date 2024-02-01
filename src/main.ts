@@ -103,6 +103,11 @@ export async function run(): Promise<void> {
 
     // TODO: handle audio files.
 
+    if (posts.length === 0) {
+      log('No posts to publish.')
+      return
+    }
+
     const results: PromiseSettledResult<unknown>[] = await Promise.allSettled(
       posts.map(async (post) => {
         const existingContent = lockfile.data?.content.find(

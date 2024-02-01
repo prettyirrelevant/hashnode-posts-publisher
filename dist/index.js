@@ -72988,6 +72988,10 @@ async function run() {
             }
         }
         // TODO: handle audio files.
+        if (posts.length === 0) {
+            (0, utils_1.log)('No posts to publish.');
+            return;
+        }
         const results = await Promise.allSettled(posts.map(async (post) => {
             const existingContent = lockfile.data?.content.find((content) => content.path === post.path && content.hash !== post.hash);
             if (existingContent) {
