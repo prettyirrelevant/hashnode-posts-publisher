@@ -24,7 +24,7 @@ jobs:
     - uses: actions/checkout@v3
 
     - name: Publish to Hashnode
-      uses: prettyirrelevant/hashnode-blog-action@v1
+      uses: prettyirrelevant/hashnode-posts-publisher@v0.1.0
       with:
         posts-directory: posts
         supported-formats: md,html

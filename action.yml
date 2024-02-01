@@ -1,5 +1,5 @@
 author: 'Isaac Adewumi'
-name: 'hashnode-blog-action'
+name: 'hashnode-posts-publisher'
 description: 'Publish posts to Hashnode by pushing Markdown files to a GitHub repository.'
 
 # Branding appears on GitHub Marketplace
