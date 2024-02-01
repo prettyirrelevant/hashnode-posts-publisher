@@ -2,7 +2,7 @@
 
 An action for publishing articles(or posts) from your Github repository to [Hashnode](https://hashnode.com).
 
-![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/prettyirrelevant/hashnode-blog/ci.yml)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/prettyirrelevant/hashnode-blog/ci.yml?style=for-the-badge)
 ![Libraries.io dependency status for GitHub repo](https://img.shields.io/librariesio/github/prettyirrelevant/hashnode-blog?style=for-the-badge)
 ![GitHub License](https://img.shields.io/github/license/prettyirrelevant/hashnode-blog?style=for-the-badge)
 ![GitHub Release](https://img.shields.io/github/v/release/prettyirrelevant/hashnode-blog?style=for-the-badge)
