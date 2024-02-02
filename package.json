@@ -1,7 +1,7 @@
 {
   "name": "hashnode-blog",
   "description": "Publish hashnode blog posts from your GitHub repository",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "author": "Isaac Adewumi",
   "private": true,
   "homepage": "https://github.com/prettyirrelevant/hashnode-blog",
