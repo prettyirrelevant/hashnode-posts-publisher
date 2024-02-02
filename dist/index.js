@@ -72937,7 +72937,7 @@ async function run() {
         const globber = await glob.create(patterns.join('\n'));
         for await (const file of globber.globGenerator()) {
             if (file.endsWith('.html') && inputs.supportedFormats.includes('html')) {
-                (0, utils_1.log)(`Processing html file ${file}`);
+                (0, utils_1.log)(`Processing file ${file}`);
                 const htmlContent = fs.readFileSync(file, { encoding: 'utf8' });
                 const markdownContent = turndownService.turndown(htmlContent);
                 const title = (0, utils_1.extractTitleFromHtml)(htmlContent) || path.parse(file).name;
@@ -72964,7 +72964,7 @@ async function run() {
                 }));
             }
             else if (file.endsWith('.md') && inputs.supportedFormats.includes('md')) {
-                (0, utils_1.log)(`Processing markdown file ${file}`);
+                (0, utils_1.log)(`Processing file ${file}`);
                 const markdownContent = fs.readFileSync(file, { encoding: 'utf8' });
                 const formattedMarkdown = (0, front_matter_1.default)(markdownContent);
                 const hash = (0, utils_1.computeContentHash)(markdownContent);

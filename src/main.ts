@@ -41,7 +41,7 @@ export async function run(): Promise<void> {
     const globber = await glob.create(patterns.join('\n'))
     for await (const file of globber.globGenerator()) {
       if (file.endsWith('.html') && inputs.supportedFormats.includes('html')) {
-        log(`Processing html file ${file}`)
+        log(`Processing file ${file}`)
 
         const htmlContent = fs.readFileSync(file, { encoding: 'utf8' })
         const markdownContent = turndownService.turndown(htmlContent)
@@ -72,7 +72,7 @@ export async function run(): Promise<void> {
           })
         )
       } else if (file.endsWith('.md') && inputs.supportedFormats.includes('md')) {
-        log(`Processing markdown file ${file}`)
+        log(`Processing file ${file}`)
         const markdownContent = fs.readFileSync(file, { encoding: 'utf8' })
         const formattedMarkdown = fm<PostAttributes>(markdownContent)
         const hash = computeContentHash(markdownContent)
