@@ -40,9 +40,9 @@ export async function run(): Promise<void> {
     const lockfile = await lockfileApiClient.retrieveLockfile()
     const globber = await glob.create(patterns.join('\n'))
     for await (const file of globber.globGenerator()) {
-      log(`Processing file ${file}`)
-
       if (file.endsWith('.html') && inputs.supportedFormats.includes('html')) {
+        log(`Processing html file ${file}`)
+
         const htmlContent = fs.readFileSync(file, { encoding: 'utf8' })
         const markdownContent = turndownService.turndown(htmlContent)
         const title = extractTitleFromHtml(htmlContent) || path.parse(file).name
@@ -72,6 +72,7 @@ export async function run(): Promise<void> {
           })
         )
       } else if (file.endsWith('.md') && inputs.supportedFormats.includes('md')) {
+        log(`Processing markdown file ${file}`)
         const markdownContent = fs.readFileSync(file, { encoding: 'utf8' })
         const formattedMarkdown = fm<PostAttributes>(markdownContent)
         const hash = computeContentHash(markdownContent)
@@ -108,6 +109,7 @@ export async function run(): Promise<void> {
       return
     }
 
+    log(`Found ${posts.length} posts to publish.`)
     const results: PromiseSettledResult<unknown>[] = await Promise.allSettled(
       posts.map(async (post) => {
         const existingContent = lockfile.data?.content.find(
@@ -124,6 +126,7 @@ export async function run(): Promise<void> {
     const successfulResults = results.filter(
       (result) => result.status === 'fulfilled'
     ) as PromiseFulfilledResult<PostSuccessResponse>[]
+    log(`Published ${successfulResults.length} posts.`)
 
     await lockfileApiClient.updateLockfile({
       successfulUploads: successfulResults.map((result) => result.value),

@@ -27,7 +27,6 @@ export type PostAttributes = z.infer<typeof PostAttributesSchema>
 
 export const PostSchema = z.object({
   attributes: PostAttributesSchema,
-  imageUrl: z.string().nullish(),
   content: z.string(),
   slug: z.string(),
   hash: z.string(),

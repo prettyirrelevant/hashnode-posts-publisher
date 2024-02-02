@@ -72936,8 +72936,8 @@ async function run() {
         const lockfile = await lockfileApiClient.retrieveLockfile();
         const globber = await glob.create(patterns.join('\n'));
         for await (const file of globber.globGenerator()) {
-            (0, utils_1.log)(`Processing file ${file}`);
             if (file.endsWith('.html') && inputs.supportedFormats.includes('html')) {
+                (0, utils_1.log)(`Processing html file ${file}`);
                 const htmlContent = fs.readFileSync(file, { encoding: 'utf8' });
                 const markdownContent = turndownService.turndown(htmlContent);
                 const title = (0, utils_1.extractTitleFromHtml)(htmlContent) || path.parse(file).name;
@@ -72964,6 +72964,7 @@ async function run() {
                 }));
             }
             else if (file.endsWith('.md') && inputs.supportedFormats.includes('md')) {
+                (0, utils_1.log)(`Processing markdown file ${file}`);
                 const markdownContent = fs.readFileSync(file, { encoding: 'utf8' });
                 const formattedMarkdown = (0, front_matter_1.default)(markdownContent);
                 const hash = (0, utils_1.computeContentHash)(markdownContent);
@@ -72992,6 +72993,7 @@ async function run() {
             (0, utils_1.log)('No posts to publish.');
             return;
         }
+        (0, utils_1.log)(`Found ${posts.length} posts to publish.`);
         const results = await Promise.allSettled(posts.map(async (post) => {
             const existingContent = lockfile.data?.content.find((content) => content.path === post.path && content.hash !== post.hash);
             if (existingContent) {
@@ -73002,6 +73004,7 @@ async function run() {
             }
         }));
         const successfulResults = results.filter((result) => result.status === 'fulfilled');
+        (0, utils_1.log)(`Published ${successfulResults.length} posts.`);
         await lockfileApiClient.updateLockfile({
             successfulUploads: successfulResults.map((result) => result.value),
             currentLockfile: lockfile?.data
@@ -73048,7 +73051,6 @@ const PostAttributesSchema = zod_1.z.object({
 });
 exports.PostSchema = zod_1.z.object({
     attributes: PostAttributesSchema,
-    imageUrl: zod_1.z.string().nullish(),
     content: zod_1.z.string(),
     slug: zod_1.z.string(),
     hash: zod_1.z.string(),
