@@ -123,9 +123,16 @@ export async function run(): Promise<void> {
       })
     )
 
+    const failedResults = results.filter((result) => result.status === 'rejected') as PromiseRejectedResult[]
+    log(`Failed to publish ${failedResults.length} posts.`)
+    for (const result of failedResults) {
+      log(result.reason)
+    }
+
     const successfulResults = results.filter(
       (result) => result.status === 'fulfilled'
     ) as PromiseFulfilledResult<PostSuccessResponse>[]
+
     log(`Published ${successfulResults.length} posts.`)
 
     await lockfileApiClient.updateLockfile({

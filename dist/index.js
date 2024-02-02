@@ -73003,6 +73003,11 @@ async function run() {
                 return await hashnodeApiClient.uploadPost(post);
             }
         }));
+        const failedResults = results.filter((result) => result.status === 'rejected');
+        (0, utils_1.log)(`Failed to publish ${failedResults.length} posts.`);
+        for (const result of failedResults) {
+            (0, utils_1.log)(result.reason);
+        }
         const successfulResults = results.filter((result) => result.status === 'fulfilled');
         (0, utils_1.log)(`Published ${successfulResults.length} posts.`);
         await lockfileApiClient.updateLockfile({
